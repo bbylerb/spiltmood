@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SplitMood</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+  --bg: #F8F6F2;
+  --bg2: #EFEDE8;
+  --card: #FFFFFF;
+  --text: #1C1C1A;
+  --text2: #6B6860;
+  --text3: #A8A69F;
+  --border: #E4E1DA;
+  --accent: #2D6A4F;
+  --accent2: #52B788;
+  --accent-light: #D8F3DC;
+  --red: #C1440E;
+  --red-light: #FDEBD0;
+  --amber: #B5530A;
+  --amber-light: #FEF3C7;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  --r: 14px;
+  --r-sm: 9px;
+  --sidebar-w: 220px;
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"] {
+  --bg: #141412;
+  --bg2: #1C1C1A;
+  --card: #222220;
+  --text: #F0EDE8;
+  --text2: #9A9890;
+  --text3: #5C5A54;
+  --border: #2E2E2A;
+  --accent: #52B788;
+  --accent2: #74C69D;
+  --accent-light: #1B3A2A;
+  --red: #E07A5F;
+  --red-light: #2E1A14;
+  --amber: #F2CC8F;
+  --amber-light: #2C2210;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:15px; }
+body {
+  font-family: 'Noto Sans Thai', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius:10px; }
+
+/* ===== AUTH ===== */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg);
+}
+.auth-box {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: var(--shadow-lg);
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.auth-logo-mark {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 26px; margin-bottom: 14px;
+}
+.auth-logo h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px; color: var(--text);
+  letter-spacing: -0.5px;
+}
+.auth-logo p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.auth-tabs {
+  display: flex;
+  background: var(--bg2);
+  border-radius: var(--r-sm);
+  padding: 3px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1; text-align: center;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all var(--transition);
+  border: none; background: transparent;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+.auth-tab.active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+.field input, .field select {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 14px; color: var(--text);
+  background: var(--bg);
+  font-family: 'Noto Sans Thai', sans-serif;
+  outline: none;
+  transition: border-color var(--transition), background var(--transition);
+}
+.field input:focus, .field select:focus { border-color: var(--accent); background: var(--card); }
+.field select option { background: var(--card); }
+.btn-full {
+  width: 100%; padding: 12px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--r-sm);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-full:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-full:active { transform: scale(0.98); }
+.err-msg {
+  background: var(--red-light); color: var(--red);
+  padding: 9px 12px; border-radius: var(--r-sm);
+  font-size: 13px; margin-bottom: 12px; display: none;
+}
+
+/* ===== APP LAYOUT ===== */
+.app { display: flex; min-height: 100vh; }
+#appScreen { display: none; }
+#appScreen.show { display: flex; width: 100%; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; top:0; left:0; height:100vh;
+  z-index: 200;
+  transition: transform var(--transition), background var(--transition);
+  overflow-y: auto;
+}
+.sidebar-head {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px; color: var(--text);
+  letter-spacing: -0.3px;
+  display: flex; align-items: center; gap: 8px;
+}
+.brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.sidebar-user {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.sidebar-user:hover { background: var(--bg2); }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 600; flex-shrink: 0;
+  background: var(--accent); color: #fff;
+  overflow: hidden; position: relative;
+}
+.avatar img { width:100%; height:100%; object-fit:cover; position:absolute; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; color: var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-curr { font-size: 11px; color: var(--text3); }
+.nav-section { padding: 10px 10px 0; flex: 1; }
+.nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  color: var(--text2); font-size: 13px; font-weight: 400;
+  cursor: pointer; text-decoration: none;
+  transition: all var(--transition);
+  margin-bottom: 1px;
+  border: none; background: transparent; width: 100%;
+  font-family: 'Noto Sans Thai', sans-serif; text-align: left;
+}
+.nav-item:hover { background: var(--bg2); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-light); color: var(--accent); font-weight: 500;
+  border-left: 3px solid var(--accent); padding-left: 7px;
+}
+.nav-icon { width: 22px; text-align: center; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+.nav-icon svg { width: 16px; height: 16px; }
+.sidebar-bottom { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg2); border-radius: 8px; padding: 4px;
+  border: 1px solid var(--border);
+}
+.theme-btn {
+  width: 28px; height: 26px; border-radius: 6px;
+  border: none; background: transparent; cursor: pointer;
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.theme-btn.active { background: var(--card); box-shadow: var(--shadow); }
+.lang-toggle { display: flex; gap: 4px; margin-left: auto; }
+.lang-btn {
+  font-size: 11px; padding: 5px 10px;
+  border-radius: 6px; border: 1.5px solid var(--border);
+  background: transparent; color: var(--text);
+  cursor: pointer; font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition); font-weight: 500;
+}
+.lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== MAIN ===== */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.hamburger {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--bg2);
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+}
+.content { flex: 1; padding: 28px 32px; max-width: 960px; }
+
+/* ===== PAGE HEADER ===== */
+.page-header { margin-bottom: 24px; }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  padding: 5px 0; margin-bottom: 10px;
+  background: none; border: none;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: color var(--transition);
+}
+.back-btn:hover { color: var(--accent); }
+.page-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px; color: var(--text);
+  letter-spacing: -0.5px; line-height: 1.2;
+}
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  transition: background var(--transition), border-color var(--transition);
+}
+.card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
+/* ===== STAT GRID ===== */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.stat-card .s-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-card .s-val { font-size: 24px; font-weight: 600; color: var(--text); margin: 5px 0 2px; }
+.stat-card .s-sub { font-size: 12px; color: var(--text2); }
+.stat-card .s-icon { position: absolute; right: 14px; top: 14px; font-size: 20px; opacity: 0.15; }
+
+/* ===== CHARTS ===== */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; box-shadow: var(--shadow); }
+.chart-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 14px; }
+
+/* Donut chart */
+.donut-wrap { display: flex; align-items: center; gap: 16px; }
+.donut-svg { flex-shrink: 0; }
+.legend { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.legend-pct { margin-left: auto; font-weight: 500; font-size: 12px; }
+
+/* Bar chart */
+.bars-wrap { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.bar-val { font-size: 10px; color: var(--text2); }
+.bar-body { width: 100%; border-radius: 5px 5px 0 0; min-height: 4px; transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; }
+.bar-body:hover { filter: brightness(1.1); }
+.bar-lbl { font-size: 10px; color: var(--text2); text-align: center; margin-top: 5px; }
+.bars-labels { display: flex; gap: 6px; }
+.bars-labels span { flex: 1; font-size: 10px; color: var(--text2); text-align: center; }
+
+/* ===== RECENT LIST ===== */
+.recent-list { display: flex; flex-direction: column; }
+.r-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.r-item:last-child { border-bottom: none; }
+.r-item:hover { background: var(--bg2); margin: 0 -22px; padding: 8px 22px; border-radius: var(--r-sm); }
+.r-item:hover .r-actions { opacity: 1; }
+.r-ico { font-size: 20px; flex-shrink: 0; }
+.r-info { flex: 1; min-width: 0; }
+.r-note { font-size: 13px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-meta { font-size: 11px; color: var(--text2); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.r-amt { font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.r-actions {
+  display: flex; gap: 4px; opacity: 0;
+  transition: opacity var(--transition); flex-shrink: 0;
+}
+.r-action-btn {
+  width: 26px; height: 26px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.r-action-btn:hover { background: var(--red-light); border-color: var(--red); }
+.r-action-btn.edit:hover { background: var(--accent-light); border-color: var(--accent); }
+
+/* ===== CONFIRM LOGOUT MODAL ===== */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 9000;
+  align-items: center; justify-content: center; padding: 20px;
+  backdrop-filter: blur(3px);
+}
+.confirm-overlay.show { display: flex; }
+.confirm-modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px 24px 20px;
+  width: 100%; max-width: 320px; box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.confirm-modal h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.confirm-modal p { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+.confirm-btns { display: flex; gap: 8px; }
+.confirm-btns button { flex: 1; padding: 10px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans Thai', sans-serif; transition: all var(--transition); }
+.confirm-cancel { background: var(--bg2); border: 1px solid var(--border); color: var(--text); }
+.confirm-cancel:hover { border-color: var(--accent); color: var(--accent); }
+.confirm-logout { background: var(--red); border: none; color: #fff; }
+.confirm-logout:hover { opacity: 0.88; }
+
+/* ===== HELP TOOLTIP ===== */
+.help-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid var(--border);
+  font-size: 10px; color: var(--text2); cursor: help;
+  margin-left: 4px; position: relative; vertical-align: middle;
+  flex-shrink: 0;
+}
+.help-icon:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  padding: 6px 10px; border-radius: 8px;
+  font-size: 11px; white-space: nowrap; z-index: 100;
+  pointer-events: none; line-height: 1.4;
+  max-width: 200px; white-space: normal; text-align: center;
+}
+
+/* ===== NO CATEGORY WARNING ===== */
+.r-no-cat {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 20px;
+  font-size: 10px; font-weight: 500;
+  background: var(--red-light); color: var(--red);
+  cursor: pointer;
+}
+
+/* ===== DATA FRESHNESS ===== */
+.data-freshness {
+  font-size: 11px; color: var(--text3);
+  display: flex; align-items: center; gap: 4px; margin-top: 2px;
+}
+.freshness-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+}
+.b-happy    { background: #D1FAE5; color: #065F46; }
+.b-neutral  { background: var(--bg2); color: var(--text2); }
+.b-sad      { background: #DBEAFE; color: #1E40AF; }
+.b-stressed { background: #FEE2E2; color: #991B1B; }
+.b-bored    { background: #EDE9FE; color: #5B21B6; }
+[data-theme="dark"] .b-happy    { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .b-neutral  { background: var(--bg2); color: var(--text2); }
+[data-theme="dark"] .b-sad      { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .b-stressed { background: #450A0A; color: #FCA5A5; }
+[data-theme="dark"] .b-bored    { background: #2E1065; color: #C4B5FD; }
+.cat-badge { background: var(--accent-light); color: var(--accent); display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+
+/* ===== QUICK ACTIONS ===== */
+.actions-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: none; font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition); text-decoration: none;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.btn-danger { background: var(--red-light); color: var(--red); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+
+/* ===== ADD EXPENSE ===== */
+/* ===== RECEIPT SCANNER ===== */
+.scan-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 11px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text2);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+  margin-bottom: 14px;
+}
+.scan-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.scan-preview {
+  width: 100%; border-radius: var(--r-sm);
+  border: 1px solid var(--border); overflow: hidden;
+  margin-bottom: 10px; display: none;
+  position: relative;
+}
+.scan-preview img { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+.scan-preview-remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); color: #fff;
+  border: none; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.scan-result {
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 12px 14px; margin-bottom: 14px;
+  display: none; animation: fadeSlideIn 0.25s ease;
+}
+@keyframes fadeSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.scan-result-title {
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+}
+.scan-result-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+.scan-result-label { font-size: 12px; color: var(--text2); }
+.scan-result-value { font-size: 13px; font-weight: 500; color: var(--text); }
+.scan-apply-btn {
+  width: 100%; margin-top: 10px; padding: 8px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+}
+.scan-apply-btn:hover { opacity: 0.88; }
+
+.scan-loading {
+  display: none; text-align: center; padding: 14px;
+  font-size: 13px; color: var(--text2);
+}
+.scan-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block; margin-right: 8px;
+  vertical-align: middle;
+}
+
+.add-form { max-width: 520px; }
+.amount-field {
+  background: var(--bg2);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+  transition: border-color var(--transition);
+}
+.amount-field:focus-within { border-color: var(--accent); }
+.currency-sym { font-size: 20px; color: var(--text2); font-weight: 500; flex-shrink: 0; }
+.amount-input-big {
+  flex: 1; border: none; background: transparent;
+  font-size: 32px; font-weight: 600; color: var(--text);
+  font-family: 'Instrument Serif', serif;
+  outline: none; width: 100%;
+}
+.amount-input-big::placeholder { color: var(--border); }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.mood-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 18px; }
+.mood-chip {
+  background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 10px 4px;
+  text-align: center; cursor: pointer;
+  transition: all var(--transition);
+}
+.mood-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+.mood-chip.sel { border-color: var(--accent); background: var(--accent-light); }
+.mood-chip .em { font-size: 22px; display: block; margin-bottom: 4px; }
+.mood-chip .nm { font-size: 10px; color: var(--text2); }
+.mood-chip.sel .nm { color: var(--accent); }
+.cat-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.cat-chip {
+  padding: 7px 13px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  transition: all var(--transition); font-family: 'Noto Sans Thai', sans-serif;
+}
+.cat-chip:hover { border-color: var(--accent); }
+.cat-chip.sel { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.note-input {
+  width: 100%; padding: 11px 13px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text);
+  font-family: 'Noto Sans Thai', sans-serif; font-size: 14px;
+  outline: none; resize: none; height: 72px;
+  transition: border-color var(--transition), background var(--transition);
+  margin-bottom: 18px;
+}
+.note-input:focus { border-color: var(--accent); background: var(--card); }
+
+/* ===== HISTORY ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-input, .filter-select {
+  padding: 8px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); background: var(--card); color: var(--text);
+  font-size: 13px; font-family: 'Noto Sans Thai', sans-serif;
+  outline: none; transition: border-color var(--transition);
+}
+.filter-input { flex: 2; min-width: 140px; }
+.filter-select { flex: 1; min-width: 110px; }
+.filter-input:focus, .filter-select:focus { border-color: var(--accent); }
+.hist-table { width: 100%; border-collapse: collapse; }
+.hist-table th { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.hist-table td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.hist-table tr:last-child td { border-bottom: none; }
+.hist-table tr:hover td { background: var(--bg2); }
+.hist-cards { display: flex; flex-direction: column; gap: 8px; }
+.hist-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  transition: background var(--transition);
+}
+.hist-card:hover { background: var(--bg2); }
+
+/* ===== AI CHAT ===== */
+.ai-header {
+  background: var(--text);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  color: #F0EDE8;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+[data-theme="dark"] .ai-header { background: var(--card); border: 1px solid var(--border); }
+.ai-header::after { content: ''; position: absolute; right: -20px; top: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+.ai-badge-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ai-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(82,183,136,0.25); border: 1px solid rgba(82,183,136,0.4); color: #74C69D; padding: 3px 10px; border-radius: 20px; font-size: 11px; }
+.ai-pulse { width: 6px; height: 6px; background: var(--accent2); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.ai-header h3 { font-size: 16px; font-weight: 500; line-height: 1.5; }
+.chat-area {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.chat-messages {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.msg { display: flex; gap: 8px; align-items: flex-start; animation: msgIn 0.2s ease; }
+.msg.user { flex-direction: row-reverse; }
+@keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.msg-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0; font-family: 'Instrument Serif', serif;
+  background: var(--text); color: var(--bg);
+}
+.msg.user .msg-av { background: var(--accent); color: #fff; }
+.msg-bubble {
+  max-width: 75%; padding: 10px 14px;
+  border-radius: var(--r-sm); font-size: 14px; line-height: 1.6;
+  background: var(--bg2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.msg.user .msg-bubble { background: var(--accent); color: #fff; border-color: var(--accent); }
+.typing { display: flex; gap: 4px; padding: 12px 14px; }
+.typing span { width: 6px; height: 6px; background: var(--text3); border-radius: 50%; animation: typing 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+.quick-qs { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+.quick-q {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 9px 13px;
+  font-size: 13px; color: var(--text); cursor: pointer;
+  text-align: left; font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition); border: none;
+}
+.quick-q:hover { border: 1px solid var(--accent); color: var(--accent); background: var(--accent-light); }
+.chat-input-row {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: center;
+}
+.chat-input {
+  flex: 1; padding: 9px 13px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text);
+  font-family: 'Noto Sans Thai', sans-serif; font-size: 14px;
+  outline: none; transition: border-color var(--transition);
+}
+.chat-input:focus { border-color: var(--accent); background: var(--card); }
+.send-btn {
+  width: 38px; height: 38px; border-radius: var(--r-sm);
+  background: var(--accent); color: #fff; border: none;
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition); flex-shrink: 0;
+}
+.send-btn:hover { opacity: 0.88; }
+.send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+/* ===== PROFILE ===== */
+.profile-hero {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 24px;
+  margin-bottom: 16px; box-shadow: var(--shadow);
+}
+.profile-top { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+.profile-av {
+  width: 68px; height: 68px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 600; flex-shrink: 0;
+  overflow: hidden; position: relative; cursor: pointer;
+  border: 3px solid var(--accent-light);
+}
+.profile-av:hover .av-overlay { opacity: 1; }
+.av-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--transition); font-size: 18px;
+}
+.profile-info h2 { font-size: 20px; font-weight: 600; }
+.profile-info p { font-size: 13px; color: var(--text2); }
+.profile-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.p-stat { background: var(--bg2); border-radius: var(--r-sm); padding: 12px; text-align: center; }
+.p-stat-val { font-size: 20px; font-weight: 600; color: var(--accent); }
+.p-stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.settings-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.settings-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; box-shadow: var(--shadow); }
+.settings-card h4 { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 12px; }
+
+/* Avatar emoji picker */
+.emoji-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+.emoji-opt {
+  width: 100%; aspect-ratio: 1; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border); background: var(--bg2);
+  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.emoji-opt:hover { border-color: var(--accent); background: var(--accent-light); }
+.emoji-opt.sel { border-color: var(--accent); background: var(--accent-light); }
+
+/* Color picker */
+.color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-opt {
+  width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all var(--transition);
+}
+.color-opt.sel { border-color: var(--text); transform: scale(1.15); }
+
+/* ===== PATTERN ALERT MODAL ===== */
+.pattern-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9000;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+.pattern-overlay.show { display: flex; }
+.pattern-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  width: 100%; max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.92) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.pattern-icon { font-size: 36px; display:flex; align-items:center; justify-content:center; text-align: center; margin-bottom: 12px; }
+.pattern-title {
+  font-size: 17px; font-weight: 600; color: var(--text);
+  text-align: center; margin-bottom: 8px;
+}
+.pattern-msg {
+  font-size: 14px; color: var(--text2); text-align: center;
+  line-height: 1.6; margin-bottom: 22px;
+}
+.pattern-actions { display: flex; flex-direction: column; gap: 8px; }
+.pattern-btn-log {
+  width: 100%; padding: 12px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg2); color: var(--text);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+}
+.pattern-btn-log:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.pattern-btn-cancel {
+  width: 100%; padding: 12px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: transparent; color: var(--text2);
+  font-size: 13px; font-weight: 400; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+}
+.pattern-btn-cancel:hover { color: var(--text); border-color: var(--text2); }
+.pattern-dismiss {
+  width: 100%; padding: 8px;
+  border: none; background: transparent;
+  color: var(--text3); font-size: 12px; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: color var(--transition);
+  margin-top: 2px;
+}
+.pattern-dismiss:hover { color: var(--text2); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; top: 20px; right: 20px;
+  background: var(--text); color: var(--bg);
+  padding: 11px 18px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-10px); opacity: 0;
+  transition: all var(--transition);
+  z-index: 9999; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok { background: var(--accent); color: #fff; }
+.toast.fail { background: var(--red); color: #fff; }
+
+/* ===== EMPTY STATE ===== */
+.empty { text-align: center; padding: 48px 20px; color: var(--text2); }
+.empty .em { font-size: 44px; display: block; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* ===== OVERLAY ===== */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 199;
+  backdrop-filter: blur(2px);
+}
+.overlay.show { display: block; }
+
+/* ===== AI INSIGHT BLOCKS ===== */
+.insight-items { list-style: none; margin-top: 12px; }
+.insight-items li { padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13px; color: rgba(240,237,232,0.8); display: flex; gap: 7px; line-height: 1.5; }
+.insight-items li:last-child { border-bottom: none; }
+[data-theme="dark"] .insight-items li { color: var(--text2); border-color: var(--border); }
+.advice-block { background: var(--amber-light); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin-top: 14px; }
+.advice-block h4 { font-size: 12px; font-weight: 600; color: var(--amber); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.advice-item { display: flex; gap: 8px; font-size: 13px; color: var(--text); padding: 5px 0; line-height: 1.5; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 200px; }
+  .content { padding: 20px 24px; }
+  .charts-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); width: 240px; }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .overlay { display: none; }
+  .overlay.show { display: block; }
+  .main { margin-left: 0; }
+  .topbar { display: flex; }
+  .content { padding: 14px 16px 80px; max-width: 100%; }
+  .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .charts-row { grid-template-columns: 1fr; gap: 12px; }
+  .settings-section { grid-template-columns: 1fr; }
+  .mood-grid { grid-template-columns: repeat(3,1fr); }
+  .add-form { max-width: 100%; }
+  .filter-bar { flex-direction: column; gap: 8px; }
+  .filter-input, .filter-select { width: 100%; flex: none; min-width: 0; }
+  .auth-right { width: 100%; padding: 28px 20px; }
+  .page-title { font-size: 22px; }
+  .profile-hero { padding: 16px; }
+  .profile-top { gap: 12px; }
+  .profile-av { width: 54px; height: 54px; font-size: 22px; }
+  .chart-card { padding: 14px 16px; }
+  .card { padding: 16px; }
+  .amount-input-big { font-size: 26px; }
+  .hist-table th, .hist-table td { padding: 8px 10px; font-size: 12px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .mood-grid { grid-template-columns: repeat(5,1fr); gap: 5px; }
+  .mood-chip { padding: 8px 2px; }
+  .mood-chip .nm { font-size: 9px; }
+  .content { padding: 12px 14px 80px; }
+  .page-title { font-size: 20px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-card .s-val { font-size: 20px; }
+  .auth-right { padding: 24px 16px; }
+  .auth-form-title { font-size: 22px; }
+  .settings-section { gap: 10px; }
+  .confirm-modal { padding: 20px 18px 16px; }
+  .r-item { padding: 7px 0; }
+  .r-note { font-size: 12px; }
+  .r-amt { font-size: 13px; }
+  .profile-stats { grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .p-stat-val { font-size: 16px; }
+}
+
+/* ===== PAGE TRANSITIONS ===== */
+.page { display: none; animation: pgIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes pgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<style>
+.auth-screen {
+  min-height: 100vh; display: flex;
+  background: var(--bg); padding: 0;
+  align-items: stretch;
+}
+/* Left panel — brand side */
+.auth-left {
+  flex: 1; background: var(--text);
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 48px;
+  position: relative; overflow: hidden;
+  min-width: 0;
+}
+[data-theme="dark"] .auth-left { background: #0E0E0C; }
+.auth-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(45,106,79,0.35) 0%, transparent 65%),
+              radial-gradient(ellipse at 80% 20%, rgba(82,183,136,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+.auth-left-top { position: relative; z-index: 1; }
+.auth-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 60px;
+}
+.auth-brand-dot {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--accent2); display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.auth-brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px; color: rgba(255,255,255,0.9);
+  letter-spacing: -0.3px;
+}
+.auth-headline {
+  font-family: 'Instrument Serif', serif;
+  font-size: 38px; color: #fff; line-height: 1.2;
+  letter-spacing: -1px; margin-bottom: 16px;
+}
+.auth-headline em { color: var(--accent2); font-style: italic; }
+.auth-desc { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.7; max-width: 320px; }
+.auth-left-bottom { position: relative; z-index: 1; }
+.auth-features { display: flex; flex-direction: column; gap: 12px; }
+.auth-feature {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: rgba(255,255,255,0.55);
+}
+.auth-feature-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent2); flex-shrink: 0; opacity: 0.7;
+}
+/* Right panel — form side */
+.auth-right {
+  width: 440px; flex-shrink: 0;
+  background: var(--card);
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 40px 44px;
+  position: relative;
+  border-left: 1px solid var(--border);
+}
+.auth-right-top {
+  position: absolute; top: 24px; right: 24px;
+  display: flex; align-items: center; gap: 6px;
+}
+.auth-lang-btn {
+  font-size: 12px; padding: 5px 10px;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text2);
+  cursor: pointer; font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+}
+.auth-lang-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.auth-form-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px; color: var(--text);
+  letter-spacing: -0.5px; margin-bottom: 4px;
+}
+.auth-form-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+.auth-switch {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 20px; font-size: 13px; color: var(--text2);
+}
+.auth-switch-btn {
+  color: var(--accent); font-weight: 500; cursor: pointer;
+  background: none; border: none; font-size: 13px;
+  font-family: 'Noto Sans Thai', sans-serif; padding: 0;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.auth-divider {
+  height: 1px; background: var(--border); margin: 20px 0;
+  position: relative;
+}
+.auth-divider span {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: var(--card); padding: 0 10px;
+  font-size: 11px; color: var(--text3);
+}
+.demo-btn {
+  width: 100%; padding: 10px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r-sm);
+  background: transparent; color: var(--text2);
+  font-size: 13px; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.demo-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.google-btn {
+  width: 100%; padding: 11px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--card); color: var(--text);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.google-btn:hover { border-color: #4285F4; background: #EEF3FF; color: #1a1a1a; }
+.google-btn svg { flex-shrink: 0; }
+/* Mobile auth */
+@media (max-width: 768px) {
+  .auth-left { display: none; }
+  .auth-right { width: 100%; padding: 32px 24px; border-left: none; }
+}
+</style>
+
+<div id="authScreen" class="auth-screen">
+  <!-- Left: Brand panel -->
+  <div class="auth-left">
+    <div class="auth-left-top">
+      <div class="auth-brand">
+        <div class="auth-brand-dot">💸</div>
+        <div class="auth-brand-name">SplitMood</div>
+      </div>
+      <div class="auth-headline" id="authHeadline">รู้ใจตัวเอง<br>ผ่าน<em>การใช้เงิน</em></div>
+      <div class="auth-desc" id="authDesc">บันทึกรายจ่ายพร้อมอารมณ์ตอนที่ซื้อ แล้วให้ AI วิเคราะห์ว่าคุณใช้เงินเพราะอะไรจริงๆ</div>
+    </div>
+    <div class="auth-left-bottom">
+      <div class="auth-features">
+        <div class="auth-feature"><div class="auth-feature-dot"></div><span id="af1">บันทึกรายจ่ายพร้อมอารมณ์ใน 3 วินาที</span></div>
+        <div class="auth-feature"><div class="auth-feature-dot"></div><span id="af2">AI วิเคราะห์ pattern การใช้เงินส่วนตัว</span></div>
+        <div class="auth-feature"><div class="auth-feature-dot"></div><span id="af3">รองรับ 5 สกุลเงิน · 2 ภาษา</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form panel -->
+  <div class="auth-right">
+    <!-- Language toggle top-right -->
+    <div class="auth-right-top">
+      <button class="auth-lang-btn active" data-alang="th" onclick="setAuthLang('th')">ไทย</button>
+      <button class="auth-lang-btn" data-alang="en" onclick="setAuthLang('en')">EN</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginPanel">
+      <div class="auth-form-title" id="loginTitle">ยินดีต้อนรับกลับ</div>
+      <div class="auth-form-sub" id="loginSub">เข้าสู่ระบบเพื่อดูรายจ่ายของคุณ</div>
+      <div class="err-msg" id="loginErr"></div>
+
+      <!-- Google Sign-In -->
+      <button class="google-btn" id="googleLoginBtn" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+        <span id="googleLoginText">เข้าสู่ระบบด้วย Google</span>
+      </button>
+
+      <div class="auth-divider"><span id="orText">หรือ</span></div>
+      <div class="field">
+        <label id="lEmailLabel">อีเมล</label>
+        <input type="email" id="lEmail" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label id="lPassLabel">รหัสผ่าน</label>
+        <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-full" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      <div class="auth-switch">
+        <span id="noAccountText">ยังไม่มีบัญชี?</span>
+        <button class="auth-switch-btn" id="toRegisterBtn" onclick="switchAuthPanel('register')">สมัครสมาชิก</button>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerPanel" style="display:none;">
+      <div class="auth-form-title" id="regTitle">สร้างบัญชีใหม่</div>
+      <div class="auth-form-sub" id="regSub">ฟรี · ไม่มีโฆษณา · เข้าได้ทุกอุปกรณ์</div>
+      <div class="err-msg" id="regErr"></div>
+
+      <!-- Google Sign-Up -->
+      <button class="google-btn" id="googleRegBtn" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+        <span id="googleRegText">สมัครด้วย Google</span>
+      </button>
+
+      <div class="auth-divider"><span>หรือสมัครด้วยอีเมล</span></div>
+      <div class="field">
+        <label id="rNameLabel">ชื่อผู้ใช้</label>
+        <input type="text" id="rName" placeholder="เช่น กานต์">
+      </div>
+      <div class="field">
+        <label id="rEmailLabel">อีเมล</label>
+        <input type="email" id="rEmail" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label id="rPassLabel">รหัสผ่าน</label>
+        <input type="password" id="rPass" placeholder="อย่างน้อย 6 ตัวอักษร">
+      </div>
+      <div class="field">
+        <label id="rCurrLabel">สกุลเงิน</label>
+        <select id="rCurr">
+          <option value="THB">🇹🇭 THB — บาทไทย</option>
+          <option value="USD">🇺🇸 USD — US Dollar</option>
+          <option value="EUR">🇪🇺 EUR — Euro</option>
+          <option value="GBP">🇬🇧 GBP — British Pound</option>
+          <option value="JPY">🇯🇵 JPY — Yen</option>
+        </select>
+      </div>
+      <button class="btn-full" id="regBtn" onclick="doRegister()">สร้างบัญชี</button>
+      <div class="auth-switch">
+        <span id="haveAccountText">มีบัญชีอยู่แล้ว?</span>
+        <button class="auth-switch-btn" id="toLoginBtn" onclick="switchAuthPanel('login')">เข้าสู่ระบบ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP SCREEN ===== -->
+<div id="appScreen">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-dot"></span>SplitMood</div>
+    </div>
+    <div class="sidebar-user" onclick="goPage('profile')">
+      <div class="avatar" id="sideAvatar"><span id="sideAvatarContent">ก</span></div>
+      <div class="user-info">
+        <div class="user-name" id="sideUsername">ผู้ใช้</div>
+        <div class="user-curr" id="sideCurr">THB · ฿</div>
+      </div>
+      <span style="color:var(--text3);font-size:12px;">›</span>
+    </div>
+    <nav class="nav-section">
+      <div class="nav-label">เมนูหลัก</div>
+      <button class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span data-i="dashboard">แดชบอร์ด</span></button>
+      <button class="nav-item" data-page="add" onclick="goPage('add')"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span data-i="addExpense">เพิ่มรายจ่าย</span></button>
+      <button class="nav-item" data-page="history" onclick="goPage('history')"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span data-i="history">ประวัติ</span></button>
+      <button class="nav-item" data-page="ai" onclick="goPage('ai')"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313-12.454z"/><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0-2 2a2 2 0 0 0-2-2a2 2 0 0 0 2-2"/><path d="M19 11h2m-1-1v2"/></svg></span><span data-i="aiInsight">AI Insight</span></button>
+      <div class="nav-label" style="margin-top:12px;">บัญชี</div>
+      <button class="nav-item" data-page="profile" onclick="goPage('profile')"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span data-i="profile">โปรไฟล์</span></button>
+      <div style="height:1px;background:var(--border);margin:8px 8px;"></div>
+      <button class="nav-item" onclick="openHelpCenter()" style="color:var(--text3);"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span><span>ช่วยเหลือ</span></button>
+      <button class="nav-item" onclick="confirmLogout()" style="color:var(--red);"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span data-i="logout">ออกจากระบบ</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="theme-toggle">
+        <button class="theme-btn active" id="themeLight" onclick="setTheme('light')" title="Light"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+        <button class="theme-btn" id="themeDark" onclick="setTheme('dark')" title="Dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="th" onclick="setLang('th')">ไทย</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar" id="topbar">
+      <button class="hamburger" onclick="openSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div style="font-family:'Instrument Serif',serif;font-size:17px;color:var(--text);">SplitMood</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="hamburger" id="topbarThemeBtn" onclick="toggleTheme()" title="เปลี่ยน theme" style="font-size:15px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+        <button class="hamburger" onclick="goPage('add')" style="background:var(--accent);border-color:var(--accent);color:#fff;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div class="page-title" data-i="dashboard">แดชบอร์ด</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="page-sub" id="dashSub"></div>
+            <div class="data-freshness" id="dataFreshness">
+              <span class="freshness-dot"></span>
+              <span id="freshnessText">อัปเดตล่าสุด: เมื่อกี้</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-label" data-i="totalMonth">รายจ่ายเดือนนี้</div><div class="s-val" id="dTotal">฿0</div><div class="s-sub" id="dCount">0 รายการ</div></div>
+          <div class="stat-card"><div class="s-label">อารมณ์ที่ใช้เงินมากสุด</div><div class="s-val" id="dTopMood">—</div><div class="s-sub" id="dTopMoodAmt"></div></div>
+          <div class="stat-card"><div class="s-label">หมวดที่ใช้เงินมากสุด</div><div class="s-val" id="dTopCat">—</div><div class="s-sub" id="dTopCatAmt"></div></div>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-primary" onclick="goPage('add')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> <span data-i="addExpense">เพิ่มรายจ่าย</span></button>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title" data-i="moodDist">รายจ่ายตามอารมณ์</div>
+            <div class="donut-wrap" id="donutWrap"><div class="empty" style="padding:20px 0;width:100%;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>ยังไม่มีข้อมูล</p></div></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" data-i="catBreak">แยกตามหมวดหมู่</div>
+            <div id="barWrap"><div class="empty" style="padding:20px 0;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>ยังไม่มีข้อมูล</p></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" data-i="recent">รายการล่าสุด</div>
+          <div class="recent-list" id="recentList"><div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg><p>เริ่มบันทึกรายจ่ายแรกของคุณ</p></div></div>
+        </div>
+      </div>
+
+      <!-- ADD EXPENSE -->
+      <div class="page" id="page-add">
+        <div class="page-header">
+          <button class="back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> <span data-i="back">กลับ</span></button>
+          <div class="page-title" data-i="addExpense">เพิ่มรายจ่าย</div>
+          <div class="page-sub" id="addDateSub"></div>
+        </div>
+        <div class="add-form">
+
+          <!-- SCAN RECEIPT -->
+          <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this)">
+          <button class="scan-btn" id="scanBtn" onclick="document.getElementById('receiptInput').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> <span id="scanBtnText">สแกนใบเสร็จ</span>
+          </button>
+
+          <!-- Preview -->
+          <div class="scan-preview" id="scanPreview">
+            <img id="scanPreviewImg" src="" alt="receipt">
+            <button class="scan-preview-remove" onclick="clearReceipt()" title="ลบรูป">×</button>
+          </div>
+
+          <!-- Loading -->
+          <div class="scan-loading" id="scanLoading">
+            <span class="scan-spinner"></span><span id="scanLoadingText">AI กำลังอ่านใบเสร็จ...</span>
+          </div>
+
+          <!-- Result -->
+          <div class="scan-result" id="scanResult">
+            <div class="scan-result-title" id="scanResultTitle">📋 ผลการสแกน</div>
+            <div class="scan-result-row">
+              <span class="scan-result-label" id="scanStoreLabel">ร้านค้า</span>
+              <span class="scan-result-value" id="scanStoreName">—</span>
+            </div>
+            <div class="scan-result-row">
+              <span class="scan-result-label" id="scanTotalLabel">ยอดรวม</span>
+              <span class="scan-result-value" id="scanTotalAmount">—</span>
+            </div>
+            <button class="scan-apply-btn" id="scanApplyBtn" onclick="applyReceiptData()">ใช้ข้อมูลนี้</button>
+          </div>
+
+          <div class="amount-field">
+            <span class="currency-sym" id="currSym">฿</span>
+            <input type="number" class="amount-input-big" id="addAmount" placeholder="0"
+              inputmode="decimal" min="0" step="0.01"
+              onkeydown="return /[\d\.\,\b]|Arrow|Delete|Tab|Enter/.test(event.key)||event.ctrlKey||event.metaKey"
+              oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1')">
+          </div>
+          <div class="form-label" data-i="moodLabel">รู้สึกยังไงตอนที่จ่าย?</div>
+          <div class="mood-grid" id="moodGrid">
+            <div class="mood-chip" data-mood="happy" onclick="pickMood(this)"><span class="em">😊</span><span class="nm" data-i="happy">มีความสุข</span></div>
+            <div class="mood-chip" data-mood="neutral" onclick="pickMood(this)"><span class="em">😐</span><span class="nm" data-i="neutral">ปกติ</span></div>
+            <div class="mood-chip" data-mood="sad" onclick="pickMood(this)"><span class="em">😢</span><span class="nm" data-i="sad">เศร้า</span></div>
+            <div class="mood-chip" data-mood="stressed" onclick="pickMood(this)"><span class="em">😡</span><span class="nm" data-i="stressed">เครียด</span></div>
+            <div class="mood-chip" data-mood="bored" onclick="pickMood(this)"><span class="em">😴</span><span class="nm" data-i="bored">เบื่อ</span></div>
+          </div>
+          <div class="form-label" data-i="catLabel">หมวดหมู่</div>
+          <div class="cat-grid" id="catGrid">
+            <div class="cat-chip" data-cat="food" onclick="pickCat(this)">🍔 <span data-i="food">อาหาร</span></div>
+            <div class="cat-chip" data-cat="drink" onclick="pickCat(this)">☕ <span data-i="drink">เครื่องดื่ม</span></div>
+            <div class="cat-chip" data-cat="transport" onclick="pickCat(this)">🚗 <span data-i="transport">เดินทาง</span></div>
+            <div class="cat-chip" data-cat="shopping" onclick="pickCat(this)">🛍️ <span data-i="shopping">ช้อปปิ้ง</span></div>
+            <div class="cat-chip" data-cat="entertainment" onclick="pickCat(this)">🎮 <span data-i="entertainment">บันเทิง</span></div>
+            <div class="cat-chip" data-cat="health" onclick="pickCat(this)">💊 <span data-i="health">สุขภาพ</span></div>
+            <div class="cat-chip" data-cat="study" onclick="pickCat(this)">📚 <span data-i="study">เรียน</span></div>
+            <div class="cat-chip" data-cat="other" onclick="pickCat(this)">… <span data-i="other">อื่นๆ</span></div>
+          </div>
+          <div class="form-label" data-i="noteLabel">โน้ต (ไม่บังคับ)</div>
+          <textarea class="note-input" id="addNote" placeholder="ซื้ออะไร หรือเหตุผลสั้นๆ..."></textarea>
+          <button class="btn-full" id="saveBtn" onclick="saveExpense()">💾 <span data-i="save">บันทึกรายจ่าย</span></button>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="page" id="page-history">
+        <div class="page-header">
+          <button class="back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> <span data-i="back">กลับ</span></button>
+          <div class="page-title" data-i="history">ประวัติรายจ่าย</div>
+        </div>
+        <div class="filter-bar">
+          <input class="filter-input" id="histSearch" placeholder="ค้นหา..." oninput="renderHistory()">
+          <select class="filter-select" id="histCat" onchange="renderHistory()">
+            <option value="all" data-i="allCat">ทุกหมวด</option>
+            <option value="food" data-i="food">🍔 อาหาร</option>
+            <option value="drink" data-i="drink">☕ เครื่องดื่ม</option>
+            <option value="transport" data-i="transport">🚗 เดินทาง</option>
+            <option value="shopping" data-i="shopping">🛍️ ช้อปปิ้ง</option>
+            <option value="entertainment" data-i="entertainment">🎮 บันเทิง</option>
+            <option value="health" data-i="health">💊 สุขภาพ</option>
+            <option value="study" data-i="study">📚 เรียน</option>
+            <option value="other" data-i="other">📦 อื่นๆ</option>
+          </select>
+          <select class="filter-select" id="histMood" onchange="renderHistory()">
+            <option value="all" data-i="allMood">ทุกอารมณ์</option>
+            <option value="happy" data-i="happy">😊 สุข</option>
+            <option value="neutral" data-i="neutral">😐 ปกติ</option>
+            <option value="sad" data-i="sad">😢 เศร้า</option>
+            <option value="stressed" data-i="stressed">😡 เครียด</option>
+            <option value="bored" data-i="bored">😴 เบื่อ</option>
+          </select>
+        </div>
+        <div class="card">
+          <div id="histContent"></div>
+        </div>
+      </div>
+
+      <!-- AI INSIGHT -->
+      <div class="page" id="page-ai">
+        <div class="page-header">
+          <button class="back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> <span data-i="back">กลับ</span></button>
+          <div class="page-title" style="display:flex;align-items:center;gap:8px;" data-i="aiInsight">AI Insight <span class="help-icon" data-tip="วิเคราะห์จากข้อมูลรายจ่าย 30 วัน โดย Gemini AI คำนวณจากอารมณ์และหมวดหมู่ที่บันทึกไว้">i</span></div>
+          <div class="page-sub" data-i="aiSub">วิเคราะห์จากข้อมูลของคุณ</div>
+        </div>
+        <div class="ai-header" id="aiHeader">
+          <div class="ai-badge-wrap">
+            <div class="ai-badge"><span class="ai-pulse"></span> AI Analysis</div>
+          </div>
+          <h3 id="aiHeadline">บันทึกรายจ่ายอย่างน้อย 3 รายการเพื่อให้ AI วิเคราะห์ ✨</h3>
+          <ul class="insight-items" id="aiInsightList"></ul>
+        </div>
+        <div class="charts-row" id="aiCharts" style="display:none;">
+          <div class="chart-card">
+            <div class="chart-title">รายจ่ายแยกตามอารมณ์</div>
+            <div id="aiBarWrap"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">หมวด × อารมณ์</div>
+            <div id="aiCatMoodWrap"></div>
+          </div>
+        </div>
+        <div class="advice-block" id="adviceBlock" style="display:none;">
+          <h4 data-i="aiAdvice">💡 คำแนะนำจาก AI</h4>
+          <div id="adviceList"></div>
+        </div>
+        <div class="chat-area" style="margin-top:16px;">
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="quick-qs" id="quickQs">
+            <button class="quick-q" onclick="sendQuick(this)">📊 วิเคราะห์ pattern การใช้เงินของฉัน</button>
+            <button class="quick-q" onclick="sendQuick(this)">😤 ทำไมฉันถึงใช้เงินเยอะตอนเครียด?</button>
+            <button class="quick-q" onclick="sendQuick(this)">💡 แนะนำวิธีประหยัดเงินสำหรับนิสัยของฉัน</button>
+            <button class="quick-q" onclick="sendQuick(this)">🎯 ฉันควรตั้งเป้าอะไรในสัปดาห์หน้า?</button>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" placeholder="ถาม AI อะไรก็ได้..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="send-btn" id="sendBtn" onclick="sendChat()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="page" id="page-profile">
+        <div class="page-header">
+          <button class="back-btn" onclick="goBack()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> <span data-i="back">กลับ</span></button>
+          <div class="page-title" data-i="profile">โปรไฟล์</div>
+        </div>
+        <!-- Password Change Modal -->
+        <div id="pwModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;padding:20px;">
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 24px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+              <div>
+                <div style="font-size:16px;font-weight:600;color:var(--text);">เปลี่ยนรหัสผ่าน</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:2px;">เพื่อความปลอดภัย กรุณายืนยันตัวตนก่อน</div>
+              </div>
+              <button onclick="closePwModal()" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center;">×</button>
+            </div>
+            <div class="err-msg" id="pwErr"></div>
+            <div class="field">
+              <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:5px;">รหัสผ่านปัจจุบัน</label>
+              <input type="password" id="pwCurrent" placeholder="ใส่รหัสผ่านเดิม" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:'Noto Sans Thai',sans-serif;outline:none;transition:border-color var(--transition);" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+            <div class="field">
+              <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:5px;">รหัสผ่านใหม่</label>
+              <input type="password" id="pwNew" placeholder="อย่างน้อย 6 ตัวอักษร" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:'Noto Sans Thai',sans-serif;outline:none;transition:border-color var(--transition);" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div class="field" style="margin-bottom:20px;">
+              <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:5px;">ยืนยันรหัสผ่านใหม่</label>
+              <input type="password" id="pwConfirm" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:'Noto Sans Thai',sans-serif;outline:none;transition:border-color var(--transition);" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="closePwModal()" style="flex:1;padding:10px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;">ยกเลิก</button>
+              <button onclick="updatePassword()" style="flex:2;padding:10px;border-radius:var(--r-sm);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;">บันทึกรหัสผ่านใหม่</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Hero -->
+        <div class="profile-hero">
+          <div class="profile-top">
+            <div class="profile-av" id="profileAv" onclick="openAvatarPicker()">
+              <span id="profileAvContent">ก</span>
+              <div class="av-overlay">✏️</div>
+            </div>
+            <div class="profile-info" style="flex:1;">
+              <!-- Inline name edit -->
+              <div id="nameDisplay" style="display:flex;align-items:center;gap:8px;">
+                <h2 id="profileName" style="font-size:20px;font-weight:600;">—</h2>
+                <button onclick="toggleNameEdit()" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="แก้ไขชื่อ">✏️</button>
+              </div>
+              <div id="nameEdit" style="display:none;gap:6px;align-items:center;margin-bottom:2px;">
+                <input type="text" id="newName" style="padding:6px 10px;border:1.5px solid var(--accent);border-radius:var(--r-sm);font-size:15px;font-weight:600;color:var(--text);background:var(--bg);font-family:'Noto Sans Thai',sans-serif;outline:none;width:160px;">
+                <button onclick="updateName()" style="padding:6px 12px;border-radius:var(--r-sm);border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;">บันทึก</button>
+                <button onclick="toggleNameEdit()" style="padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;">ยกเลิก</button>
+              </div>
+              <p id="profileEmail" style="font-size:13px;color:var(--text2);"></p>
+              <p style="font-size:12px;color:var(--text3);margin-top:2px;" id="profileJoin"></p>
+            </div>
+          </div>
+          <div class="profile-stats">
+            <div class="p-stat"><div class="p-stat-val" id="pCount">0</div><div class="p-stat-label" data-i="totalRecords">รายการทั้งหมด</div></div>
+            <div class="p-stat"><div class="p-stat-val" id="pTotal">฿0</div><div class="p-stat-label">รายจ่ายรวม</div></div>
+            <div class="p-stat"><div class="p-stat-val" id="pCurr">THB</div><div class="p-stat-label">สกุลเงิน</div></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <!-- Avatar picker -->
+          <div class="settings-card">
+            <h4>เลือก Avatar</h4>
+            <div class="emoji-grid" id="emojiGrid"></div>
+          </div>
+          <!-- Theme color + currency -->
+          <div class="settings-card">
+            <h4>สีธีม</h4>
+            <div class="color-grid" id="colorGrid"></div>
+            <div style="margin-top:16px;">
+              <h4 style="margin-bottom:10px;">สกุลเงิน</h4>
+              <select class="filter-select" style="width:100%;" id="pCurrSelect" onchange="updateCurrency()">
+                <option value="THB">🇹🇭 THB — บาทไทย</option>
+                <option value="USD">🇺🇸 USD — US Dollar</option>
+                <option value="EUR">🇪🇺 EUR — Euro</option>
+                <option value="GBP">🇬🇧 GBP — British Pound</option>
+                <option value="JPY">🇯🇵 JPY — Yen</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appearance section -->
+        <div class="card" style="margin-top:12px;margin-bottom:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;color:var(--text);">โหมดการแสดงผล</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="themeModeLabel">โหมดสว่าง (Light)</div>
+            </div>
+            <!-- Toggle switch -->
+            <div onclick="toggleTheme()" style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:12px;color:var(--text3);" id="themeIconLabel">☀️</span>
+              <div id="themeToggleTrack" style="width:44px;height:24px;border-radius:12px;background:var(--border);position:relative;transition:background 0.2s;">
+                <div id="themeToggleThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+              </div>
+            </div>
+          </div>
+          <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;color:var(--text);">ภาษา / Language</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="currentLangLabel">ภาษาไทย</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="setLang('th')" data-lang="th" class="lang-btn active" style="font-size:12px;padding:6px 12px;">ไทย</button>
+              <button onclick="setLang('en')" data-lang="en" class="lang-btn" style="font-size:12px;padding:6px 12px;">EN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security section -->
+        <div class="card" style="margin-top:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;color:var(--text);">รหัสผ่าน</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px;">อัปเดตล่าสุด: ไม่ทราบ</div>
+            </div>
+            <button class="btn btn-ghost" onclick="openPwModal()" style="font-size:13px;padding:8px 14px;">เปลี่ยนรหัสผ่าน</button>
+          </div>
+          <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;color:var(--text);">เซสชันที่ใช้งาน</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px;">อุปกรณ์นี้ · ตอนนี้</div>
+            </div>
+            <button class="btn btn-danger" onclick="doLogout()" style="font-size:13px;padding:8px 14px;">ออกจากระบบ</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <button class="btn btn-danger" style="width:100%;justify-content:center;padding:12px;" onclick="doLogout()">ออกจากระบบทุกอุปกรณ์</button>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end appScreen -->
+
+<!-- PATTERN ALERT MODAL -->
+<div class="pattern-overlay" id="patternOverlay">
+  <div class="pattern-modal">
+    <div class="pattern-icon" id="patternIcon">💡</div>
+    <div class="pattern-title" id="patternTitle">สังเกตเห็น Pattern</div>
+    <div class="pattern-msg" id="patternMsg">คุณมักซื้อสิ่งนี้ตอนอารมณ์แบบนี้บ่อยมาก อยากหยุดคิดสักครู่ก่อนไหม?</div>
+    <div class="pattern-actions">
+      <button class="pattern-btn-log" id="patternLogBtn" onclick="logAnywayAndClose()">บันทึกต่อเลย</button>
+      <button class="pattern-btn-cancel" id="patternCancelBtn" onclick="closePatternAlert()">ขอคิดดูก่อน ไม่ซื้อแล้ว</button>
+    </div>
+    <button class="pattern-dismiss" id="patternDismiss" onclick="logAnywayAndClose()">ปิด</button>
+  </div>
+</div>
+
+<!-- CONFIRM LOGOUT MODAL -->
+<div class="confirm-overlay" id="confirmLogoutOverlay">
+  <div class="confirm-modal">
+    <div style="font-size:32px;margin-bottom:10px;">🚪</div>
+    <h3 id="logoutConfirmTitle">ออกจากระบบ?</h3>
+    <p id="logoutConfirmMsg">ข้อมูลของคุณจะยังคงอยู่ในเครื่อง พร้อมใช้งานเมื่อ login กลับมา</p>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeConfirmLogout()" id="logoutCancelBtn">ยกเลิก</button>
+      <button class="confirm-logout" onclick="doLogout()" id="logoutConfirmBtn">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP CENTER MODAL -->
+<div class="confirm-overlay" id="helpOverlay">
+  <div class="confirm-modal" style="max-width:380px;text-align:left;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:600;color:var(--text);">❓ ช่วยเหลือ</div>
+      <button onclick="closeHelpCenter()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:10px 12px;background:var(--bg2);border-radius:var(--r-sm);">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">📷 สแกนใบเสร็จ</div>
+        <div style="font-size:12px;color:var(--text2);">ถ่ายรูปใบเสร็จ AI จะอ่านชื่อร้านและยอดรวมให้อัตโนมัติ</div>
+      </div>
+      <div style="padding:10px 12px;background:var(--bg2);border-radius:var(--r-sm);">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">✨ AI Insight</div>
+        <div style="font-size:12px;color:var(--text2);">วิเคราะห์จากข้อมูล 30 วันย้อนหลัง แสดงว่าคุณใช้เงินเพราะอารมณ์ไหนมากที่สุด</div>
+      </div>
+      <div style="padding:10px 12px;background:var(--bg2);border-radius:var(--r-sm);">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">🚨 Pattern Alert</div>
+        <div style="font-size:12px;color:var(--text2);">แจ้งเตือนเมื่อซื้อ category เดิมในอารมณ์เดิมซ้ำ 2 ครั้งขึ้นไปในสัปดาห์</div>
+      </div>
+      <div style="padding:10px 12px;background:var(--bg2);border-radius:var(--r-sm);">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">💬 AI Chat</div>
+        <div style="font-size:12px;color:var(--text2);">คุยกับ AI เกี่ยวกับพฤติกรรมการใช้เงิน รับคำแนะนำ personalized</div>
+      </div>
+    </div>
+    <button onclick="closeHelpCenter()" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;">ปิด</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONFIG =====
+const MOODS = {
+  happy:    { em:'😊', name:'มีความสุข', en:'Happy',   cls:'b-happy',    color:'#22C55E' },
+  neutral:  { em:'😐', name:'ปกติ',       en:'Neutral', cls:'b-neutral',  color:'#9CA3AF' },
+  sad:      { em:'😢', name:'เศร้า',      en:'Sad',     cls:'b-sad',      color:'#3B82F6' },
+  stressed: { em:'😡', name:'เครียด',     en:'Stressed',cls:'b-stressed', color:'#EF4444' },
+  bored:    { em:'😴', name:'เบื่อ',      en:'Bored',   cls:'b-bored',    color:'#8B5CF6' },
+};
+const CATS = {
+  food:'🍔', drink:'☕', transport:'🚗', shopping:'🛍️',
+  entertainment:'🎮', health:'💊', study:'📚', other:'…'
+};
+const CURR = { THB:'฿', USD:'$', EUR:'€', GBP:'£', JPY:'¥' };
+const COLORS = ['#2D6A4F','#1D6FA4','#7C3AED','#C1440E','#B5530A','#0F766E','#BE185D','#374151'];
+const AVATARS = ['😊','🦊','🐼','🐸','🦁','🐺','🦋','🐙','🌸','⚡','🎯','🎸','🍀','🔥','💎','🌙'];
+
+const TRANS = {
+  th: {
+    dashboard:'แดชบอร์ด', addExpense:'เพิ่มรายจ่าย', history:'ประวัติ',
+    aiInsight:'AI Insight', profile:'โปรไฟล์', logout:'ออกจากระบบ',
+    back:'กลับ', totalMonth:'รายจ่ายเดือนนี้', moodDist:'รายจ่ายตามอารมณ์',
+    catBreak:'แยกตามหมวดหมู่', recent:'รายการล่าสุด', save:'บันทึกรายจ่าย',
+    moodLabel:'รู้สึกยังไงตอนที่จ่าย?', catLabel:'หมวดหมู่', noteLabel:'โน้ต (ไม่บังคับ)',
+    aiSub:'วิเคราะห์จากข้อมูลของคุณ', aiAdvice:'💡 คำแนะนำจาก AI',
+    totalRecords:'รายการทั้งหมด', allCat:'ทุกหมวด', allMood:'ทุกอารมณ์',
+    happy:'มีความสุข', neutral:'ปกติ', sad:'เศร้า', stressed:'เครียด', bored:'เบื่อ',
+    food:'อาหาร', drink:'เครื่องดื่ม', transport:'เดินทาง', shopping:'ช้อปปิ้ง',
+    entertainment:'บันเทิง', health:'สุขภาพ', study:'เรียน', other:'อื่นๆ',
+  },
+  en: {
+    dashboard:'Dashboard', addExpense:'Add Expense', history:'History',
+    aiInsight:'AI Insight', profile:'Profile', logout:'Logout',
+    back:'Back', totalMonth:'This Month', moodDist:'Mood Distribution',
+    catBreak:'Category Breakdown', recent:'Recent Expenses', save:'Save Expense',
+    moodLabel:'How do you feel?', catLabel:'Category', noteLabel:'Note (optional)',
+    aiSub:'Based on your spending data', aiAdvice:'💡 AI Recommendations',
+    totalRecords:'Total Records', allCat:'All Categories', allMood:'All Moods',
+    happy:'Happy', neutral:'Neutral', sad:'Sad', stressed:'Stressed', bored:'Bored',
+    food:'Food', drink:'Drink', transport:'Transport', shopping:'Shopping',
+    entertainment:'Entertainment', health:'Health', study:'Study', other:'Other',
+  }
+};
+
+// ===== STATE =====
+let user = null;
+let expenses = [];
+let lang = 'th';
+let selectedMood = null;
+let selectedCat = null;
+let pageHistory = ['dashboard'];
+let chatHistory = [];
+
+// ===== LOCAL STORAGE =====
+function saveData() {
+  localStorage.setItem('sm_user', JSON.stringify(user));
+  localStorage.setItem('sm_expenses', JSON.stringify(expenses));
+}
+function loadData() {
+  try {
+    user = JSON.parse(localStorage.getItem('sm_user'));
+    expenses = JSON.parse(localStorage.getItem('sm_expenses')) || [];
+    lang = localStorage.getItem('sm_lang') || 'th';
+  } catch(e) { user = null; expenses = []; }
+}
+
+// ===== AUTH LANG =====
+const AUTH_TEXT = {
+  th: {
+    headline: 'รู้ใจตัวเอง\nผ่านการใช้เงิน',
+    desc: 'บันทึกรายจ่ายพร้อมอารมณ์ตอนที่ซื้อ แล้วให้ AI วิเคราะห์ว่าคุณใช้เงินเพราะอะไรจริงๆ',
+    f1: 'บันทึกรายจ่ายพร้อมอารมณ์ใน 3 วินาที',
+    f2: 'AI วิเคราะห์ pattern การใช้เงินส่วนตัว',
+    f3: 'รองรับ 5 สกุลเงิน · 2 ภาษา',
+    loginTitle: 'ยินดีต้อนรับกลับ', loginSub: 'เข้าสู่ระบบเพื่อดูรายจ่ายของคุณ',
+    emailLabel: 'อีเมล', passLabel: 'รหัสผ่าน',
+    loginBtn: 'เข้าสู่ระบบ', or: 'หรือ',
+    demo: 'ทดลองใช้ด้วย Demo Account',
+    noAccount: 'ยังไม่มีบัญชี?', toRegister: 'สมัครสมาชิก',
+    regTitle: 'สร้างบัญชีใหม่', regSub: 'ฟรี · ไม่มีโฆษณา · เข้าได้ทุกอุปกรณ์',
+    nameLabel: 'ชื่อผู้ใช้', currLabel: 'สกุลเงิน',
+    regBtn: 'สร้างบัญชี',
+    haveAccount: 'มีบัญชีอยู่แล้ว?', toLogin: 'เข้าสู่ระบบ',
+    errFill: 'กรุณากรอกข้อมูลให้ครบ', errPass: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัว',
+    errEmail: 'อีเมลไม่ถูกต้อง', errDup: 'อีเมลนี้ถูกใช้แล้ว', errWrong: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  },
+  en: {
+    headline: 'Understand\nyourself through\nspending',
+    desc: 'Log expenses with your mood, then let AI reveal why you really spend the way you do.',
+    f1: 'Log expenses with mood in 3 seconds',
+    f2: 'AI analyzes your personal spending patterns',
+    f3: 'Supports 5 currencies · 2 languages',
+    loginTitle: 'Welcome back', loginSub: 'Sign in to see your expenses',
+    emailLabel: 'Email', passLabel: 'Password',
+    loginBtn: 'Sign In', or: 'or',
+    demo: 'Try with Demo Account',
+    noAccount: "Don't have an account?", toRegister: 'Sign up',
+    regTitle: 'Create account', regSub: 'Free · No ads · Access anywhere',
+    nameLabel: 'Username', currLabel: 'Currency',
+    regBtn: 'Create Account',
+    haveAccount: 'Already have an account?', toLogin: 'Sign in',
+    errFill: 'Please fill in all fields', errPass: 'Password must be at least 6 characters',
+    errEmail: 'Invalid email address', errDup: 'Email already in use', errWrong: 'Incorrect email or password',
+  }
+};
+
+let authLang = localStorage.getItem('sm_lang') || 'th';
+
+function setAuthLang(l) {
+  authLang = l; lang = l; localStorage.setItem('sm_lang', l);
+  document.querySelectorAll('.auth-lang-btn').forEach(b => b.classList.toggle('active', b.dataset.alang===l));
+  const T = AUTH_TEXT[l];
+  const hl = document.getElementById('authHeadline');
+  if (hl) hl.innerHTML = T.headline.replace(/\n/g,'<br>').replace('การใช้เงิน','<em>การใช้เงิน</em>').replace('spending','<em>spending</em>');
+  setText('authDesc', T.desc);
+  setText('af1', T.f1); setText('af2', T.f2); setText('af3', T.f3);
+  setText('loginTitle', T.loginTitle); setText('loginSub', T.loginSub);
+  setText('lEmailLabel', T.emailLabel); setText('lPassLabel', T.passLabel);
+  setVal('loginBtn', T.loginBtn); setText('orText', T.or);
+  setText('demoText', T.demo); setText('noAccountText', T.noAccount);
+  setVal('toRegisterBtn', T.toRegister);
+  setText('regTitle', T.regTitle); setText('regSub', T.regSub);
+  setText('rNameLabel', T.nameLabel); setText('rEmailLabel', T.emailLabel);
+  setText('rPassLabel', T.passLabel); setText('rCurrLabel', T.currLabel);
+  setVal('regBtn', T.regBtn); setText('haveAccountText', T.haveAccount);
+  setVal('toLoginBtn', T.toLogin);
+}
+
+function setText(id, text) { const el=document.getElementById(id); if(el) el.textContent=text; }
+function setVal(id, text) { const el=document.getElementById(id); if(el) el.textContent=text; }
+
+function switchAuthPanel(panel) {
+  document.getElementById('loginPanel').style.display = panel==='login' ? 'block' : 'none';
+  document.getElementById('registerPanel').style.display = panel==='register' ? 'block' : 'none';
+}
+
+function loginDemo() {
+  user = { name:'Demo User', email:'demo@splitmood.com', password:'demo123', currency:'THB', avatar:'😊', accentColor:'#2D6A4F', joined: new Date().toISOString() };
+  expenses = [];
+  loadDemoData();
+  saveData(); showApp();
+}
+
+function doLogin() {
+  const email = document.getElementById('lEmail').value.trim();
+  const pass = document.getElementById('lPass').value;
+  const err = document.getElementById('loginErr');
+  const T = AUTH_TEXT[authLang];
+  err.style.display = 'none';
+
+  if (!email || !pass) { err.style.display='block'; err.textContent=T.errFill; return; }
+
+  // Demo account
+  if (email === 'demo@splitmood.com' && pass === 'demo123') {
+    user = { name:'Demo User', email, password:'demo123', currency:'THB', avatar:'😊', accentColor:'#2D6A4F', joined: new Date().toISOString() };
+    if (!expenses.length) loadDemoData();
+    saveData(); showApp(); return;
+  }
+
+  // Check stored users
+  const users = JSON.parse(localStorage.getItem('sm_users') || '[]');
+  const found = users.find(u => u.email === email && u.password === pass);
+  if (!found) { err.style.display='block'; err.textContent=T.errWrong; return; }
+  user = found;
+  expenses = JSON.parse(localStorage.getItem('sm_exp_'+email) || '[]');
+  saveData(); showApp();
+}
+
+function doRegister() {
+  const name = document.getElementById('rName').value.trim();
+  const email = document.getElementById('rEmail').value.trim();
+  const pass = document.getElementById('rPass').value;
+  const curr = document.getElementById('rCurr').value;
+  const err = document.getElementById('regErr');
+  const T = AUTH_TEXT[authLang];
+  err.style.display = 'none';
+
+  if (!name||!email||!pass) { err.style.display='block'; err.textContent=T.errFill; return; }
+  if (pass.length < 6) { err.style.display='block'; err.textContent=T.errPass; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.style.display='block'; err.textContent=T.errEmail; return; }
+
+  const users = JSON.parse(localStorage.getItem('sm_users') || '[]');
+  if (users.find(u => u.email === email)) { err.style.display='block'; err.textContent=T.errDup; return; }
+
+  const newUser = { name, email, password:pass, currency:curr, avatar:'😊', accentColor:'#2D6A4F', joined: new Date().toISOString() };
+  users.push(newUser);
+  localStorage.setItem('sm_users', JSON.stringify(users));
+  user = newUser; expenses = [];
+  saveData(); showApp();
+}
+
+function doLogout() {
+  if (user) localStorage.setItem('sm_exp_'+user.email, JSON.stringify(expenses));
+  user = null; expenses = []; chatHistory = [];
+  localStorage.removeItem('sm_user');
+  sessionStorage.clear();
+  document.getElementById('appScreen').classList.remove('show');
+  // reset login form
+  const lEmail = document.getElementById('lEmail'); if(lEmail) lEmail.value='';
+  const lPass  = document.getElementById('lPass');  if(lPass)  lPass.value='';
+  const loginErr = document.getElementById('loginErr'); if(loginErr) loginErr.style.display='none';
+  const authEl = document.getElementById('authScreen');
+  authEl.style.display = 'flex';
+  switchAuthPanel('login');
+  setTimeout(() => showToast(authLang==='th' ? 'ออกจากระบบแล้ว' : 'Signed out'), 100);
+}
+
+function loadDemoData() {
+  const moods = ['happy','neutral','sad','stressed','bored'];
+  const cats = ['food','drink','transport','shopping','entertainment','health','other'];
+  const notes = ['กาแฟเช้า','ข้าวเที่ยง','Grab ไปมหาลัย','ช้อป Shopee','Netflix','ยา','กินข้าวกับเพื่อน','ชาเย็น'];
+  for (let i=0; i<15; i++) {
+    const d = new Date(); d.setDate(d.getDate() - Math.floor(Math.random()*28));
+    expenses.push({ id:Date.now()+i, amount:Math.floor(Math.random()*500)+30, mood:moods[Math.floor(Math.random()*5)], category:cats[Math.floor(Math.random()*7)], note:notes[Math.floor(Math.random()*notes.length)], date:d.toISOString() });
+  }
+}
+
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('show');
+  lang = authLang;
+  applyTheme(localStorage.getItem('sm_theme') || 'light');
+  setLang(lang, true);
+  updateSidebarUser();
+  applyAccentColor(user.accentColor || '#2D6A4F');
+  goPage('dashboard');
+}
+
+// ===== NAVIGATION =====
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page===page));
+  document.getElementById('page-'+page).classList.add('active');
+  if (pageHistory[pageHistory.length-1] !== page) pageHistory.push(page);
+  if (window.innerWidth <= 768) closeSidebar();
+
+  // Render page data
+  if (page==='dashboard') renderDashboard();
+  if (page==='history') renderHistory();
+  if (page==='ai') renderAI();
+  if (page==='profile') renderProfile();
+  if (page==='add') {
+    selectedMood = null; selectedCat = null;
+    document.getElementById('addAmount').value = '';
+    document.getElementById('addNote').value = '';
+    document.querySelectorAll('.mood-chip').forEach(m=>m.classList.remove('sel'));
+    document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('sel'));
+    document.getElementById('addDateSub').textContent = new Date().toLocaleDateString(lang==='th'?'th-TH':'en-US',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('currSym').textContent = CURR[user.currency]||'฿';
+    clearReceipt();
+    updateScanLang();
+  }
+}
+
+function goBack() {
+  pageHistory.pop();
+  const prev = pageHistory[pageHistory.length-1] || 'dashboard';
+  pageHistory.pop();
+  goPage(prev);
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ===== THEME =====
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('sm_theme', t);
+  const dark = t === 'dark';
+  // Sidebar buttons
+  document.getElementById('themeLight').classList.toggle('active', !dark);
+  document.getElementById('themeDark').classList.toggle('active', dark);
+  // Topbar button
+  const topBtn = document.getElementById('topbarThemeBtn');
+  if (topBtn) topBtn.innerHTML = dark ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  // Profile toggle
+  const track = document.getElementById('themeToggleTrack');
+  const thumb = document.getElementById('themeToggleThumb');
+  const label = document.getElementById('themeModeLabel');
+  const icon  = document.getElementById('themeIconLabel');
+  if (track) track.style.background = dark ? 'var(--accent)' : 'var(--border)';
+  if (thumb) thumb.style.transform = dark ? 'translateX(20px)' : 'translateX(0)';
+  if (label) label.textContent = dark ? (lang==='th'?'โหมดมืด (Dark)':'Dark mode') : (lang==='th'?'โหมดสว่าง (Light)':'Light mode');
+  if (icon)  icon.innerHTML = dark ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+}
+function setTheme(t) { applyTheme(t); if(user){user.theme=t;saveData();} }
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function applyAccentColor(color) {
+  document.documentElement.style.setProperty('--accent', color);
+  const rgb = hexToRgb(color);
+  if (rgb) {
+    document.documentElement.style.setProperty('--accent2', lighten(color, 20));
+    document.documentElement.style.setProperty('--accent-light', `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`);
+  }
+  if (user) user.accentColor = color;
+  document.querySelectorAll('.color-opt').forEach(c => c.classList.toggle('sel', c.dataset.color===color));
+}
+
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? { r:parseInt(r[1],16), g:parseInt(r[2],16), b:parseInt(r[3],16) } : null;
+}
+function lighten(hex, amt) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return hex;
+  return `rgb(${Math.min(255,rgb.r+amt)},${Math.min(255,rgb.g+amt)},${Math.min(255,rgb.b+amt)})`;
+}
+
+// ===== LANGUAGE =====
+function setLang(l, silent) {
+  lang = l; localStorage.setItem('sm_lang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang===l));
+  document.querySelectorAll('[data-i]').forEach(el => {
+    const key = el.dataset.i;
+    if (TRANS[l][key]) el.textContent = TRANS[l][key];
+  });
+  const label = document.getElementById('currentLangLabel');
+  if (label) label.textContent = l==='th' ? 'ภาษาไทย' : 'English';
+  const themeLabel = document.getElementById('themeModeLabel');
+  if (themeLabel) {
+    const dark = document.documentElement.getAttribute('data-theme')==='dark';
+    themeLabel.textContent = dark ? (l==='th'?'โหมดมืด (Dark)':'Dark mode') : (l==='th'?'โหมดสว่าง (Light)':'Light mode');
+  }
+  updateScanLang();
+  if (!silent) showToast(l==='th' ? 'เปลี่ยนเป็นภาษาไทย' : 'Switched to English');
+}
+
+// ===== SIDEBAR USER =====
+function updateSidebarUser() {
+  if (!user) return;
+  const avatarContent = user.avatar || (user.name && user.name.length > 0 ? user.name[0].toUpperCase() : '?');
+  const sideAv = document.getElementById('sideAvatarContent');
+  const profAv = document.getElementById('profileAvContent');
+  if (sideAv) sideAv.textContent = avatarContent;
+  if (profAv) profAv.textContent = avatarContent;
+  const sideUser = document.getElementById('sideUsername');
+  if (sideUser) sideUser.textContent = user.name || 'User';
+  const sideCurr = document.getElementById('sideCurr');
+  if (sideCurr) sideCurr.textContent = `${user.currency || 'THB'} · ${CURR[user.currency] || '฿'}`;
+}
+
+function openAvatarPicker() {
+  // กด avatar ที่หน้า profile → scroll ไปที่ emoji grid ให้เลือกได้เลย
+  goPage('profile');
+  setTimeout(() => {
+    const grid = document.getElementById('emojiGrid');
+    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// ===== EXPENSE HELPERS =====
+function fmtCurr(amount) {
+  const sym = CURR[user?.currency] || '฿';
+  const n = parseFloat(amount)||0;
+  if (user?.currency==='JPY') return sym+Math.round(n).toLocaleString();
+  return sym+n.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString(lang==='th'?'th-TH':'en-US',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+function getMonthExp() {
+  const now = new Date();
+  return expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  });
+}
+function getMoodTotals(list) {
+  return list.reduce((a,e)=>{ a[e.mood]=(a[e.mood]||0)+e.amount; return a; }, {});
+}
+function getCatTotals(list) {
+  return list.reduce((a,e)=>{ a[e.category]=(a[e.category]||0)+e.amount; return a; }, {});
+}
+
+// ===== PATTERN DETECTION =====
+let pendingExpense = null; // เก็บข้อมูลรอ confirm
+
+function checkPattern(amount, mood, category) {
+  // ดูย้อนหลัง 7 วัน หา combination mood+category เดิม
+  const last7 = expenses.filter(e => new Date(e.date) >= new Date(Date.now() - 7*864e5));
+  const matches = last7.filter(e => e.mood === mood && e.category === category);
+
+  if (matches.length >= 2) {
+    return {
+      detected: true,
+      count: matches.length,
+      mood,
+      category,
+    };
+  }
+  return { detected: false };
+}
+
+function showPatternAlert(pattern, amount, mood, category, note) {
+  pendingExpense = { amount, mood, category, note };
+
+  const moodName = lang === 'th' ? MOODS[mood]?.name : MOODS[mood]?.en;
+  const catName  = TRANS[lang][category] || category;
+  const catIcon  = CATS[category] || '📦';
+  const moodIcon = MOODS[mood]?.em || '😐';
+
+  document.getElementById('patternIcon').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`;
+
+  document.getElementById('patternTitle').textContent =
+    lang === 'th' ? 'สังเกตเห็น Pattern' : 'We noticed a pattern';
+
+  document.getElementById('patternMsg').textContent =
+    lang === 'th'
+      ? `คุณซื้อ ${catIcon} ${catName} ตอน${moodIcon} ${moodName} มาแล้ว ${pattern.count} ครั้งในสัปดาห์นี้ แค่แจ้งให้รู้นะ จะซื้อหรือไม่ก็ตัดสินใจเองได้เลย`
+      : `You've bought ${catIcon} ${catName} while feeling ${moodIcon} ${moodName} ${pattern.count} time${pattern.count>1?'s':''} this week. Just letting you know — you decide.`;
+
+  document.getElementById('patternLogBtn').textContent =
+    lang === 'th' ? 'บันทึกต่อเลย' : 'Log anyway';
+
+  document.getElementById('patternCancelBtn').textContent =
+    lang === 'th' ? 'ขอคิดดูก่อน ไม่ซื้อแล้ว' : 'Actually, I\'ll skip it';
+
+  const dismiss = document.getElementById('patternDismiss');
+  if (dismiss) dismiss.textContent = lang === 'th' ? 'ปิด' : 'Dismiss';
+
+  document.getElementById('patternOverlay').classList.add('show');
+}
+
+function logAnywayAndClose() {
+  document.getElementById('patternOverlay').classList.remove('show');
+  if (pendingExpense) {
+    commitSave(pendingExpense.amount, pendingExpense.mood, pendingExpense.category, pendingExpense.note);
+    pendingExpense = null;
+  }
+}
+
+function closePatternAlert() {
+  document.getElementById('patternOverlay').classList.remove('show');
+  pendingExpense = null;
+  showToast(lang === 'th' ? 'โอเค ไว้คิดดูก่อนนะ 👍' : 'No worries, take your time 👍', 'ok');
+  setTimeout(() => goPage('dashboard'), 1200);
+}
+
+function commitSave(amount, mood, category, note) {
+  expenses.push({ id: Date.now(), amount, mood, category, note, date: new Date().toISOString() });
+  localStorage.setItem('sm_exp_' + user.email, JSON.stringify(expenses));
+  saveData();
+  showToast(lang === 'th' ? 'บันทึกสำเร็จ! ✓' : 'Saved! ✓', 'ok');
+  setTimeout(() => goPage('dashboard'), 1000);
+}
+
+// ===== RECEIPT SCANNER =====
+let receiptExtracted = null;
+
+function handleReceiptFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('scanPreviewImg').src = e.target.result;
+    document.getElementById('scanPreview').style.display = 'block';
+    scanReceipt(e.target.result);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function scanReceipt(dataUrl) {
+  // Show loading, hide result
+  document.getElementById('scanLoading').style.display = 'block';
+  document.getElementById('scanResult').style.display = 'none';
+  document.getElementById('scanBtn').disabled = true;
+
+  // Extract base64 data (remove data:image/...;base64, prefix)
+  const base64Data = dataUrl.split(',')[1];
+  const mimeType = dataUrl.split(';')[0].split(':')[1];
+
+  const prompt = lang === 'th'
+    ? 'อ่านใบเสร็จนี้แล้วตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น: {"store":"ชื่อร้านค้า","total":ตัวเลขยอดรวม} ถ้าหาไม่เจอให้ใช้ null'
+    : 'Read this receipt and respond in JSON only, no other text: {"store":"store name","total":total_number} Use null if not found';
+
+  try {
+    const res = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 150,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const text = data.content?.[0]?.text || '{}';
+    const result = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+    receiptExtracted = result;
+
+    document.getElementById('scanStoreName').textContent = result.store || (lang === 'th' ? 'ไม่พบชื่อร้าน' : 'Not found');
+    document.getElementById('scanTotalAmount').textContent = result.total ? fmtCurr(result.total) : (lang === 'th' ? 'ไม่พบยอดรวม' : 'Not found');
+    document.getElementById('scanResult').style.display = 'block';
+
+  } catch (e) {
+    showToast(lang === 'th' ? 'อ่านใบเสร็จไม่ได้ ลองใหม่' : 'Could not read receipt, try again', 'fail');
+    clearReceipt();
+  }
+
+  document.getElementById('scanLoading').style.display = 'none';
+  document.getElementById('scanBtn').disabled = false;
+}
+
+function applyReceiptData() {
+  if (!receiptExtracted) return;
+  if (receiptExtracted.total) {
+    document.getElementById('addAmount').value = receiptExtracted.total;
+  }
+  if (receiptExtracted.store) {
+    const note = document.getElementById('addNote');
+    if (!note.value) note.value = receiptExtracted.store;
+  }
+  document.getElementById('scanResult').style.display = 'none';
+  showToast(lang === 'th' ? 'ใส่ข้อมูลจากใบเสร็จแล้ว ✓' : 'Receipt data applied ✓', 'ok');
+}
+
+function clearReceipt() {
+  receiptExtracted = null;
+  document.getElementById('scanPreview').style.display = 'none';
+  document.getElementById('scanResult').style.display = 'none';
+  document.getElementById('scanPreviewImg').src = '';
+}
+
+function updateScanLang() {
+  const isTh = lang === 'th';
+  const btn = document.getElementById('scanBtnText');
+  if (btn) btn.textContent = isTh ? 'สแกนใบเสร็จ' : 'Scan receipt';
+  const loading = document.getElementById('scanLoadingText');
+  if (loading) loading.textContent = isTh ? 'AI กำลังอ่านใบเสร็จ...' : 'AI reading receipt...';
+  const title = document.getElementById('scanResultTitle');
+  if (title) title.textContent = isTh ? '📋 ผลการสแกน' : '📋 Scan result';
+  const storeLabel = document.getElementById('scanStoreLabel');
+  if (storeLabel) storeLabel.textContent = isTh ? 'ร้านค้า' : 'Store';
+  const totalLabel = document.getElementById('scanTotalLabel');
+  if (totalLabel) totalLabel.textContent = isTh ? 'ยอดรวม' : 'Total';
+  const applyBtn = document.getElementById('scanApplyBtn');
+  if (applyBtn) applyBtn.textContent = isTh ? 'ใช้ข้อมูลนี้' : 'Apply this data';
+}
+
+// ===== ADD EXPENSE =====
+function pickMood(el) {
+  document.querySelectorAll('.mood-chip').forEach(m=>m.classList.remove('sel'));
+  el.classList.add('sel'); selectedMood = el.dataset.mood;
+}
+function pickCat(el) {
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); selectedCat = el.dataset.cat;
+}
+
+function saveExpense() {
+  const amount = parseFloat(document.getElementById('addAmount').value);
+  const note = document.getElementById('addNote').value.trim();
+
+  if (!amount || amount <= 0) { showToast(lang==='th'?'กรุณาใส่จำนวนเงิน':'Please enter an amount', 'fail'); return; }
+  if (!selectedMood)   { showToast(lang==='th'?'กรุณาเลือกอารมณ์':'Please select a mood', 'fail'); return; }
+  if (!selectedCat)    { showToast(lang==='th'?'กรุณาเลือกหมวดหมู่':'Please select a category', 'fail'); return; }
+
+  // ตรวจ pattern ก่อนบันทึก
+  const pattern = checkPattern(amount, selectedMood, selectedCat);
+  if (pattern.detected) {
+    showPatternAlert(pattern, amount, selectedMood, selectedCat, note);
+  } else {
+    commitSave(amount, selectedMood, selectedCat, note);
+  }
+}
+
+// ===== RENDER DASHBOARD =====
+function renderDashboard() {
+  const month = getMonthExp();
+  const total = month.reduce((s,e)=>s+e.amount,0);
+  document.getElementById('dTotal').textContent = fmtCurr(total);
+  document.getElementById('dCount').textContent = month.length + (lang==='th'?' รายการ':' expenses');
+  document.getElementById('dashSub').textContent = new Date().toLocaleDateString(lang==='th'?'th-TH':'en-US',{month:'long',year:'numeric'});
+
+  const moodT = getMoodTotals(month);
+  const moodS = Object.entries(moodT).sort((a,b)=>b[1]-a[1]);
+  if (moodS.length) {
+    const [tm,ta] = moodS[0];
+    document.getElementById('dTopMood').textContent = MOODS[tm].em+' '+(lang==='th'?MOODS[tm].name:MOODS[tm].en);
+    document.getElementById('dTopMoodAmt').textContent = fmtCurr(ta);
+  }
+
+  const catT = getCatTotals(month);
+  const catS = Object.entries(catT).sort((a,b)=>b[1]-a[1]);
+  if (catS.length) {
+    const [tc,tca] = catS[0];
+    document.getElementById('dTopCat').textContent = (CATS[tc]||'📦')+' '+(TRANS[lang][tc]||tc);
+    document.getElementById('dTopCatAmt').textContent = fmtCurr(tca);
+  }
+
+  // Donut chart
+  renderDonut('donutWrap', moodS, total);
+
+  // Bar chart
+  renderBars('barWrap', catS);
+
+  // Freshness
+  const now2 = new Date();
+  document.getElementById('freshnessText').textContent = (lang==='th' ? 'อัปเดตล่าสุด: ' : 'Last updated: ') + now2.toLocaleTimeString(lang==='th'?'th-TH':'en-US', {hour:'2-digit',minute:'2-digit'});
+
+  // Recent
+  const recentEl = document.getElementById('recentList');
+  const recent = [...expenses].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  if (!recent.length) {
+    recentEl.innerHTML = '<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg><p>'+(lang==='th'?'ยังไม่มีรายการ บันทึกรายแรกเลย!':'No expenses yet. Add your first one!')+'</p></div>';
+    return;
+  }
+  recentEl.innerHTML = recent.map(e=>`
+    <div class="r-item">
+      <div class="r-ico">${MOODS[e.mood]?.em||'😐'}</div>
+      <div class="r-info">
+        <div class="r-note">${e.note||(TRANS[lang][e.category]||e.category)}</div>
+        <div class="r-meta">
+          <span class="badge ${MOODS[e.mood]?.cls||''}">${MOODS[e.mood]?.em||''} ${lang==='th'?MOODS[e.mood]?.name:MOODS[e.mood]?.en}</span>
+          ${e.category ? `<span class="cat-badge">${CATS[e.category]||''} ${TRANS[lang][e.category]||e.category}</span>` : `<span class="r-no-cat" onclick="goPage('add')">⚠️ ${lang==='th'?'ไม่มีหมวด':'No category'}</span>`}
+          · ${fmtDate(e.date)}
+        </div>
+      </div>
+      <div class="r-amt">${fmtCurr(e.amount)}</div>
+      <div class="r-actions">
+        <button class="r-action-btn" onclick="deleteExpense(${e.id})" title="${lang==='th'?'ลบ':'Delete'}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>`).join('');
+}
+
+function renderDonut(wrapId, moodSorted, total) {
+  const wrap = document.getElementById(wrapId);
+  if (!moodSorted.length) { wrap.innerHTML='<div class="empty" style="padding:20px 0;width:100%;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>'+(lang==='th'?'ยังไม่มีข้อมูล':'No data')+'</p></div>'; return; }
+  const size = 100; const r = 36; const cx = 50; const cy = 50;
+  const circumference = 2 * Math.PI * r;
+  let offset = -circumference * 0.25;
+  let paths = '';
+  moodSorted.forEach(([mood,amt]) => {
+    const pct = amt/total;
+    const dash = pct * circumference;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${MOODS[mood]?.color||'#ccc'}" stroke-width="14" stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${-offset}" stroke-linecap="butt"/>`;
+    offset += dash;
+  });
+  wrap.innerHTML = `
+    <div class="donut-wrap">
+      <svg class="donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg2)" stroke-width="14"/>
+        ${paths}
+      </svg>
+      <div class="legend">${moodSorted.map(([m,a])=>`
+        <div class="legend-item">
+          <div class="legend-dot" style="background:${MOODS[m]?.color}"></div>
+          ${MOODS[m]?.em} ${lang==='th'?MOODS[m]?.name:MOODS[m]?.en}
+          <span class="legend-pct">${Math.round(a/total*100)}%</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderBars(wrapId, catSorted) {
+  const wrap = document.getElementById(wrapId);
+  if (!catSorted.length) { wrap.innerHTML='<div class="empty" style="padding:20px 0;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>'+(lang==='th'?'ยังไม่มีข้อมูล':'No data')+'</p></div>'; return; }
+  const top = catSorted.slice(0,5);
+  const max = top[0][1];
+  const colors = ['var(--accent)','#3B82F6','#F59E0B','#EF4444','#8B5CF6'];
+  wrap.innerHTML = `
+    <div class="bars-wrap">${top.map(([cat,amt],i)=>`
+      <div class="bar-col">
+        <div class="bar-val">${fmtCurr(amt)}</div>
+        <div class="bar-body" style="height:${Math.max((amt/max*100),4)}%;background:${colors[i]};" title="${TRANS[lang][cat]||cat}: ${fmtCurr(amt)}"></div>
+      </div>`).join('')}
+    </div>
+    <div class="bars-labels">${top.map(([cat])=>`<span>${CATS[cat]||''}<br>${TRANS[lang][cat]||cat}</span>`).join('')}</div>`;
+}
+
+// ===== RENDER HISTORY =====
+function renderHistory() {
+  const search = document.getElementById('histSearch').value.toLowerCase();
+  const cat = document.getElementById('histCat').value;
+  const mood = document.getElementById('histMood').value;
+
+  let list = [...expenses].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (cat!=='all') list = list.filter(e=>e.category===cat);
+  if (mood!=='all') list = list.filter(e=>e.mood===mood);
+  if (search) list = list.filter(e=>(e.note||'').toLowerCase().includes(search)||(TRANS[lang][e.category]||'').toLowerCase().includes(search));
+
+  const el = document.getElementById('histContent');
+  if (!list.length) { el.innerHTML='<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>'+(lang==='th'?'ไม่พบรายการ':'No results found')+'</p></div>'; return; }
+
+  if (window.innerWidth < 600) {
+    el.innerHTML = `<div class="hist-cards">${list.map(e=>`
+      <div class="hist-card">
+        <div style="font-size:22px;">${MOODS[e.mood]?.em||'😐'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.note||(TRANS[lang][e.category]||e.category)}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge ${MOODS[e.mood]?.cls||''}">${MOODS[e.mood]?.em} ${lang==='th'?MOODS[e.mood]?.name:MOODS[e.mood]?.en}</span>
+            <span class="cat-badge">${CATS[e.category]||''} ${TRANS[lang][e.category]||e.category}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${fmtDate(e.date)}</div>
+        </div>
+        <div style="font-size:15px;font-weight:600;">${fmtCurr(e.amount)}</div>
+      </div>`).join('')}</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div style="overflow-x:auto;"><table class="hist-table">
+    <thead><tr>
+      <th>${lang==='th'?'วันที่':'Date'}</th>
+      <th>${lang==='th'?'จำนวน':'Amount'}</th>
+      <th>${lang==='th'?'หมวด':'Category'}</th>
+      <th>${lang==='th'?'อารมณ์':'Mood'}</th>
+      <th>${lang==='th'?'โน้ต':'Note'}</th>
+    </tr></thead>
+    <tbody>${list.map(e=>`<tr>
+      <td style="white-space:nowrap;color:var(--text2);font-size:12px;">${fmtDate(e.date)}</td>
+      <td style="font-weight:600;">${fmtCurr(e.amount)}</td>
+      <td><span class="cat-badge">${CATS[e.category]||''} ${TRANS[lang][e.category]||e.category}</span></td>
+      <td><span class="badge ${MOODS[e.mood]?.cls||''}">${MOODS[e.mood]?.em||''} ${lang==='th'?MOODS[e.mood]?.name:MOODS[e.mood]?.en}</span></td>
+      <td style="color:var(--text2);font-size:13px;">${e.note||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ===== RENDER AI =====
+async function renderAI() {
+  const last30 = expenses.filter(e=>new Date(e.date)>=new Date(Date.now()-30*864e5));
+  const total = last30.reduce((s,e)=>s+e.amount,0);
+  const moodT = getMoodTotals(last30);
+  const moodS = Object.entries(moodT).sort((a,b)=>b[1]-a[1]);
+  const catT = getCatTotals(last30);
+  const catS = Object.entries(catT).sort((a,b)=>b[1]-a[1]);
+
+  if (last30.length < 3) {
+    document.getElementById('aiHeadline').textContent = lang==='th'?'บันทึกรายจ่ายอย่างน้อย 3 รายการเพื่อให้ AI วิเคราะห์ ✨':'Add at least 3 expenses for AI to analyze ✨';
+    document.getElementById('aiInsightList').innerHTML = '';
+    document.getElementById('aiCharts').style.display = 'none';
+    document.getElementById('adviceBlock').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('aiCharts').style.display = 'grid';
+  document.getElementById('adviceBlock').style.display = 'block';
+
+  // Charts
+  renderBars('aiBarWrap', moodS.map(([m,a])=>[m,a]));
+  const wrap = document.getElementById('aiCatMoodWrap');
+  const maxC = catS[0]?.[1]||1;
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">${catS.slice(0,5).map(([cat,amt])=>`
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:100px;font-size:11px;color:var(--text2);flex-shrink:0;">${CATS[cat]||''} ${TRANS[lang][cat]||cat}</div>
+      <div style="flex:1;height:7px;background:var(--bg2);border-radius:4px;overflow:hidden;">
+        <div style="width:${(amt/maxC*100).toFixed(0)}%;height:100%;background:var(--accent);border-radius:4px;"></div>
+      </div>
+      <div style="font-size:11px;font-weight:500;min-width:48px;text-align:right;">${fmtCurr(amt)}</div>
+    </div>`).join('')}</div>`;
+
+  // AI Generate
+  await generateAI(last30, moodS, catS, total);
+}
+
+async function generateAI(expList, moodS, catS, total) {
+  const topMood = moodS[0];
+  const topPct = topMood ? Math.round(topMood[1]/total*100) : 0;
+  const moodSummary = moodS.map(([m,a])=>`${lang==='th'?MOODS[m].name:MOODS[m].en}: ${fmtCurr(a)}`).join(', ');
+  const catSummary = catS.slice(0,4).map(([c,a])=>`${TRANS[lang][c]||c}: ${fmtCurr(a)}`).join(', ');
+
+  const cached = sessionStorage.getItem('ai_insight_'+JSON.stringify(moodS.slice(0,3)));
+  if (cached) { applyAIResult(JSON.parse(cached)); return; }
+
+  document.getElementById('aiHeadline').textContent = lang==='th'?'AI กำลังวิเคราะห์...':'AI is analyzing...';
+
+  const prompt = `ข้อมูลรายจ่าย 30 วัน: รวม ${fmtCurr(total)} (${expList.length} รายการ)
+อารมณ์: ${moodSummary}
+หมวดหมู่: ${catSummary}
+ตอบเป็น JSON เท่านั้น:
+{"headline":"สรุป 1 ประโยค","insights":["insight1","insight2","insight3"],"advice":["คำแนะนำ1","คำแนะนำ2","คำแนะนำ3"]}`;
+
+  try {
+    const res = await fetch('/api/ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:500,
+        system: lang==='th'?'คุณคือที่ปรึกษาการเงินที่เข้าใจจิตวิทยา ตอบเป็นภาษาไทย ตอบเป็น JSON เท่านั้น':'You are a financial psychology advisor. Answer in English. Respond in JSON only.',
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    const text = d.content?.[0]?.text||'{}';
+    const result = JSON.parse(text.replace(/```json|```/g,'').trim());
+    sessionStorage.setItem('ai_insight_'+JSON.stringify(moodS.slice(0,3)), JSON.stringify(result));
+    applyAIResult(result);
+  } catch(e) {
+    // Fallback
+    const topName = topMood ? (lang==='th'?MOODS[topMood[0]].name:MOODS[topMood[0]].en) : '';
+    applyAIResult({
+      headline: lang==='th' ? `คุณใช้เงิน ${topPct}% ตอน${topName}` : `${topPct}% of spending happens when feeling ${topName}`,
+      insights: [lang==='th'?'ดูกราฟด้านล่างเพื่อเข้าใจ pattern ของคุณ':'Check the charts below to understand your patterns.'],
+      advice: [lang==='th'?'สังเกตอารมณ์ตัวเองก่อนใช้เงินทุกครั้ง':'Notice your mood before making purchases.']
+    });
+  }
+}
+
+function applyAIResult(result) {
+  document.getElementById('aiHeadline').textContent = result.headline||'';
+  document.getElementById('aiInsightList').innerHTML = (result.insights||[]).map(i=>`<li><span>→</span>${i}</li>`).join('');
+  document.getElementById('adviceList').innerHTML = (result.advice||[]).map((a,i)=>`<div class="advice-item"><span>${['1️⃣','2️⃣','3️⃣'][i]||'•'}</span>${a}</div>`).join('');
+}
+
+// ===== AI CHAT =====
+function sendQuick(btn) {
+  document.getElementById('quickQs').style.display = 'none';
+  sendChatMsg(btn.textContent);
+}
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  sendChatMsg(text);
+}
+
+async function sendChatMsg(text) {
+  const msgs = document.getElementById('chatMessages');
+  document.getElementById('quickQs').style.display = 'none';
+
+  msgs.innerHTML += `<div class="msg user"><div class="msg-av">ฉ</div><div class="msg-bubble">${text}</div></div>`;
+
+  const typId = 'typ'+Date.now();
+  msgs.innerHTML += `<div class="msg" id="${typId}"><div class="msg-av">AI</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  document.getElementById('sendBtn').disabled = true;
+
+  chatHistory.push({role:'user',content:text});
+
+  const last30 = expenses.filter(e=>new Date(e.date)>=new Date(Date.now()-30*864e5));
+  const total = last30.reduce((s,e)=>s+e.amount,0);
+  const moodT = getMoodTotals(last30);
+  const moodSummary = Object.entries(moodT).map(([m,a])=>`${MOODS[m].name}: ${fmtCurr(a)}`).join(', ');
+
+  const sys = `คุณคือ SplitMood AI ผู้ช่วยวิเคราะห์การเงินส่วนตัว
+ข้อมูล: รายจ่าย 30 วัน รวม ${fmtCurr(total)} (${last30.length} รายการ) แยกอารมณ์: ${moodSummary}
+ตอบ${lang==='th'?'ภาษาไทย':'เป็นภาษาอังกฤษ'} กระชับ เป็นกันเอง ไม่เกิน 4 ประโยค`;
+
+  try {
+    const res = await fetch('/api/ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:400,
+        system:sys, messages:chatHistory
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    const reply = d.content?.[0]?.text || (lang==='th'?'ขอโทษ เกิดข้อผิดพลาด ลองใหม่นะ':'Sorry, something went wrong. Try again.');
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById(typId).outerHTML = `<div class="msg"><div class="msg-av">AI</div><div class="msg-bubble">${reply.replace(/\n/g,'<br>')}</div></div>`;
+  } catch(e) {
+    document.getElementById(typId).outerHTML = `<div class="msg"><div class="msg-av">AI</div><div class="msg-bubble">${lang==='th'?'ไม่สามารถเชื่อมต่อ AI ได้ตอนนี้':'Cannot connect to AI right now.'}</div></div>`;
+  }
+  document.getElementById('sendBtn').disabled = false;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ===== PROFILE =====
+function renderProfile() {
+  if (!user) return;
+  document.getElementById('profileAvContent').textContent = user.avatar||user.name[0];
+  document.getElementById('profileAv').style.background = user.accentColor||'var(--accent)';
+  document.getElementById('sideAvatar').style.background = user.accentColor||'var(--accent)';
+  document.getElementById('profileName').textContent = user.name;
+  document.getElementById('profileEmail').textContent = user.email;
+  document.getElementById('profileJoin').textContent = (lang==='th'?'สมาชิกตั้งแต่ ':'Member since ')+new Date(user.joined||Date.now()).toLocaleDateString(lang==='th'?'th-TH':'en-US',{month:'short',year:'numeric'});
+  document.getElementById('pCount').textContent = expenses.length;
+  document.getElementById('pTotal').textContent = fmtCurr(expenses.reduce((s,e)=>s+e.amount,0));
+  document.getElementById('pCurr').textContent = user.currency;
+  document.getElementById('pCurrSelect').value = user.currency;
+
+  // Avatar grid
+  document.getElementById('emojiGrid').innerHTML = AVATARS.map(a=>`
+    <button class="emoji-opt ${user.avatar===a?'sel':''}" onclick="setAvatar('${a}')">${a}</button>`).join('');
+
+  // Color grid
+  document.getElementById('colorGrid').innerHTML = COLORS.map(c=>`
+    <div class="color-opt ${user.accentColor===c?'sel':''}" data-color="${c}" style="background:${c};" onclick="applyAccentColor('${c}');saveData();renderProfile();"></div>`).join('');
+}
+
+function toggleNameEdit() {
+  const display = document.getElementById('nameDisplay');
+  const edit = document.getElementById('nameEdit');
+  const isEditing = edit.style.display === 'flex';
+  display.style.display = isEditing ? 'flex' : 'none';
+  edit.style.display = isEditing ? 'none' : 'flex';
+  if (!isEditing) {
+    document.getElementById('newName').value = user.name;
+    document.getElementById('newName').focus();
+  }
+}
+
+function openPwModal() {
+  const modal = document.getElementById('pwModal');
+  modal.style.display = 'flex';
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  document.getElementById('pwErr').style.display = 'none';
+  setTimeout(()=>document.getElementById('pwCurrent').focus(), 100);
+}
+
+function closePwModal() {
+  document.getElementById('pwModal').style.display = 'none';
+}
+
+function setAvatar(a) {
+  user.avatar = a;
+  updateSidebarUser();
+  renderProfile();
+  saveData();
+  showToast(lang==='th'?'เปลี่ยน avatar แล้ว':'Avatar updated!','ok');
+}
+
+function updateCurrency() {
+  user.currency = document.getElementById('pCurrSelect').value;
+  updateSidebarUser();
+  renderProfile();
+  saveData();
+  showToast(lang==='th'?'เปลี่ยนสกุลเงินแล้ว':'Currency updated!','ok');
+}
+
+function updateName() {
+  const n = document.getElementById('newName').value.trim();
+  if (!n) { showToast(lang==='th'?'กรุณากรอกชื่อ':'Please enter a name','fail'); return; }
+  user.name = n;
+  updateSidebarUser();
+  toggleNameEdit();
+  renderProfile();
+  saveData();
+  showToast(lang==='th'?'เปลี่ยนชื่อแล้ว ✓':'Name updated ✓','ok');
+}
+
+function updatePassword() {
+  const current = document.getElementById('pwCurrent').value;
+  const p1 = document.getElementById('pwNew').value;
+  const p2 = document.getElementById('pwConfirm').value;
+  const err = document.getElementById('pwErr');
+  err.style.display = 'none';
+  const isTh = lang === 'th';
+
+  if (!current) { err.style.display='block'; err.textContent=isTh?'กรุณาใส่รหัสผ่านปัจจุบัน':'Please enter your current password'; return; }
+  if (current !== user.password) { err.style.display='block'; err.textContent=isTh?'รหัสผ่านปัจจุบันไม่ถูกต้อง':'Current password is incorrect'; return; }
+  if (!p1 || p1.length < 6) { err.style.display='block'; err.textContent=isTh?'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร':'New password must be at least 6 characters'; return; }
+  if (p1 !== p2) { err.style.display='block'; err.textContent=isTh?'รหัสผ่านใหม่ไม่ตรงกัน':'New passwords do not match'; return; }
+  if (p1 === current) { err.style.display='block'; err.textContent=isTh?'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม':'New password must be different from current'; return; }
+
+  user.password = p1;
+  const users = JSON.parse(localStorage.getItem('sm_users')||'[]');
+  const idx = users.findIndex(u=>u.email===user.email);
+  if (idx>-1) { users[idx].password=p1; localStorage.setItem('sm_users',JSON.stringify(users)); }
+  saveData();
+  closePwModal();
+  showToast(isTh?'เปลี่ยนรหัสผ่านแล้ว ✓':'Password changed ✓','ok');
+}
+
+// ===== CONFIRM LOGOUT =====
+function confirmLogout() {
+  const isTh = lang === 'th';
+  document.getElementById('logoutConfirmTitle').textContent = isTh ? 'ออกจากระบบ?' : 'Sign out?';
+  document.getElementById('logoutConfirmMsg').textContent = isTh ? 'ข้อมูลของคุณจะยังคงอยู่ในเครื่อง พร้อมใช้งานเมื่อ login กลับมา' : 'Your data stays on this device. You can log back in anytime.';
+  document.getElementById('logoutCancelBtn').textContent = isTh ? 'ยกเลิก' : 'Cancel';
+  document.getElementById('logoutConfirmBtn').textContent = isTh ? 'ออกจากระบบ' : 'Sign out';
+  document.getElementById('confirmLogoutOverlay').classList.add('show');
+}
+function closeConfirmLogout() {
+  document.getElementById('confirmLogoutOverlay').classList.remove('show');
+}
+
+// ===== HELP CENTER =====
+function openHelpCenter() {
+  document.getElementById('helpOverlay').classList.add('show');
+  if (window.innerWidth <= 768) closeSidebar();
+}
+function closeHelpCenter() {
+  document.getElementById('helpOverlay').classList.remove('show');
+}
+
+// ===== DELETE EXPENSE =====
+function deleteExpense(id) {
+  if (!confirm(lang === 'th' ? 'ลบรายการนี้?' : 'Delete this expense?')) return;
+  expenses = expenses.filter(e => e.id !== id);
+  localStorage.setItem('sm_exp_' + user.email, JSON.stringify(expenses));
+  saveData();
+  showToast(lang === 'th' ? 'ลบแล้ว' : 'Deleted', 'ok');
+  renderDashboard();
+}
+
+// ===== TOAST =====
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+type;
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ===== GOOGLE LOGIN =====
+let googleClientId = '';
+
+async function initGoogleAuth() {
+  try {
+    const res = await fetch('/api/config');
+    const cfg = await res.json();
+    googleClientId = cfg.googleClientId;
+    if (!googleClientId) return;
+
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+  } catch(e) {
+    console.log('Google init skipped:', e.message);
+  }
+}
+
+function signInWithGoogle() {
+  if (!googleClientId) {
+    showToast(authLang === 'th' ? 'Google Login ไม่พร้อมใช้งาน' : 'Google Login not available', 'fail');
+    return;
+  }
+  google.accounts.id.prompt((notification) => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // popup fallback
+      google.accounts.id.renderButton(
+        document.createElement('div'),
+        { theme: 'outline', size: 'large' }
+      );
+    }
+  });
+}
+
+function handleGoogleCredential(response) {
+  try {
+    // decode JWT payload (ไม่ต้อง verify ฝั่ง client สำหรับ demo)
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const googleUser = {
+      name: payload.name || payload.email.split('@')[0],
+      email: payload.email,
+      password: 'google-oauth',
+      currency: 'THB',
+      avatar: payload.picture ? '🌐' : '😊',
+      googlePicture: payload.picture || null,
+      accentColor: '#2D6A4F',
+      joined: new Date().toISOString(),
+      loginMethod: 'google'
+    };
+
+    // บันทึก / อัปเดต user
+    const users = JSON.parse(localStorage.getItem('sm_users') || '[]');
+    const existing = users.findIndex(u => u.email === googleUser.email);
+    if (existing > -1) {
+      // เคย login แล้ว — ดึงข้อมูลเดิม
+      user = { ...users[existing], loginMethod: 'google' };
+      expenses = JSON.parse(localStorage.getItem('sm_exp_' + user.email) || '[]');
+    } else {
+      // ครั้งแรก — สร้าง user ใหม่
+      users.push(googleUser);
+      localStorage.setItem('sm_users', JSON.stringify(users));
+      user = googleUser;
+      expenses = [];
+    }
+
+    // อัปเดต avatar ให้แสดงรูป Google ถ้ามี
+    if (user.googlePicture) {
+      user.avatar = '🌐';
+    }
+
+    saveData();
+    showApp();
+    showToast((authLang === 'th' ? 'เข้าสู่ระบบด้วย Google สำเร็จ · ' : 'Signed in with Google · ') + user.name, 'ok');
+  } catch(e) {
+    showToast(authLang === 'th' ? 'Google Login ผิดพลาด ลองใหม่' : 'Google Login failed, try again', 'fail');
+  }
+}
+
+// อัปเดต sidebar avatar ถ้าเป็น Google user
+function updateSidebarUser() {
+  if (!user) return;
+  let avatarContent = user.avatar || (user.name && user.name.length > 0 ? user.name[0].toUpperCase() : '?');
+  const sideAv = document.getElementById('sideAvatarContent');
+  const profAv = document.getElementById('profileAvContent');
+  const sideAvEl = document.getElementById('sideAvatar');
+  const profAvEl = document.getElementById('profileAv');
+
+  if (user.googlePicture && user.loginMethod === 'google') {
+    // ใส่รูป Google profile
+    [sideAvEl, profAvEl].forEach(el => {
+      if (el) {
+        el.style.background = '#eee';
+        el.innerHTML = `<img src="${user.googlePicture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;" onerror="this.style.display='none'"><span style="position:relative;">${avatarContent}</span>`;
+      }
+    });
+  } else {
+    if (sideAv) sideAv.textContent = avatarContent;
+    if (profAv) profAv.textContent = avatarContent;
+    if (sideAvEl) sideAvEl.style.background = user.accentColor || 'var(--accent)';
+    if (profAvEl) profAvEl.style.background = user.accentColor || 'var(--accent)';
+  }
+
+  const sideUser = document.getElementById('sideUsername');
+  if (sideUser) sideUser.textContent = user.name || 'User';
+  const sideCurr = document.getElementById('sideCurr');
+  if (sideCurr) sideCurr.textContent = `${user.currency || 'THB'} · ${CURR[user.currency] || '฿'}`;
+}
+
+// Update auth lang texts for Google buttons
+const _origSetAuthLang = setAuthLang;
+setAuthLang = function(l) {
+  _origSetAuthLang(l);
+  const glText = document.getElementById('googleLoginText');
+  const grText = document.getElementById('googleRegText');
+  if (glText) glText.textContent = l === 'th' ? 'เข้าสู่ระบบด้วย Google' : 'Sign in with Google';
+  if (grText) grText.textContent = l === 'th' ? 'สมัครด้วย Google' : 'Sign up with Google';
+  const ot2 = document.getElementById('orText2');
+  if (ot2) ot2.textContent = l === 'th' ? 'หรือ' : 'or';
+};
+
+// ===== INIT =====
+loadData();
+authLang = localStorage.getItem('sm_lang') || 'th';
+setAuthLang(authLang);
+if (user) { showApp(); }
+else {
+  document.getElementById('authScreen').style.display = 'flex';
+  applyTheme(localStorage.getItem('sm_theme') || 'light');
+}
+// โหลด Google config จาก server
+initGoogleAuth();
+</script>
+</body>
+</html>
